@@ -14,8 +14,8 @@ nv.*
 vendor/
 node_modules/
 storage/logs/
-public/build/
 .phpunit.cache/
+bootstrap/cache/*.php
 tests/
 .idea/
 .vscode/
