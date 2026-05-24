@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-echo "Running composer"
-composer global require hirak/prestissimo
-composer install --no-dev --working-dir=/var/www/html
-
-echo "Caching config..."
+set -euo pipefail
+echo "Running composer install..."
+composer install --no-dev --working-dir=/var/www/html --optimize-autoloader
+echo "Caching config / routes / views..."
 php artisan config:cache
-
-echo "Caching routes..."
 php artisan route:cache
-
-echo "Running migrations..."
+php artisan view:cache
+echo "Running migrations against Neon..."
 php artisan migrate --force
+echo "Deploy script complete.

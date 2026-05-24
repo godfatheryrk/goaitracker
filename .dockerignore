@@ -9,3 +9,13 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+.git
+nv.*
+vendor/
+node_modules/
+storage/logs/
+public/build/
+.phpunit.cache/
+tests/
+.idea/
+.vscode/

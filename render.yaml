@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: goaitracker
+    env: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_SSLMODE
+        value: require
+      - key: APP_KEY
+        sync: false
+      - key: DB_URL
+        sync: false
+      - key: APP_URL
+        sync: false
