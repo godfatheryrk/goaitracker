@@ -53,6 +53,52 @@ If any item is missing when S-01 reaches `/10x-plan-review`, the reviewer MUST b
 
 ---
 
+## AI suggestion surface (F-02)
+
+**Established by**: F-02 (`context/changes/ai-suggestion-service/`).
+
+**PRD anchors**: FR-008, FR-009, NFR(ai-ceiling), NFR(ai-graceful).
+
+### Public seam
+
+```php
+app(\App\Services\AiStepSuggester::class)
+    ->suggestSteps(User $user, string $title, string $description, array $currentSteps = []): array
+```
+
+Resolve via the container (singleton-bound in `AppServiceProvider`). Callers do not instantiate directly.
+
+### Return contract
+
+- **Success**: exactly 7 `string` elements, each 1–200 characters. The array is ordered as the model returned it; callers MAY reorder for display.
+- **Any failure**: empty array `[]`. Failure modes include: network timeout, HTTP 4xx/5xx from the provider, malformed/non-JSON response, wrong step count, over-quota, and any other `\Throwable`. The empty-array contract is unconditional — provider exceptions never cross this seam.
+- Callers MUST treat `[]` as "AI unavailable, proceed manually." They MUST NOT surface the failure as an error to the end user (NFR(ai-graceful)).
+
+### Rate-limit counter table
+
+Table: `ai_call_counters(id, owner_id, day, count, created_at, updated_at)`
+
+- `owner_id` FK → `users.id` cascade-on-delete (F-01 convention).
+- Unique index on `(owner_id, day)`.
+- Counter is incremented **BEFORE** the provider call (attempt-based). A call that fails still costs one unit toward the ceiling — this prevents a misconfigured key from issuing unlimited requests.
+- **Ceiling**: `config('ai.step_suggestion.ceiling_per_day')` (default 20) calls per user per UTC calendar day.
+- When the ceiling is reached, `suggestSteps()` returns `[]` immediately without dispatching the agent. The counter is NOT incremented further for ceiling-blocked calls.
+
+### Sync-execution constraint
+
+The AI call runs synchronously on the web request thread. Render's free tier has no Background Worker, so this is a deployment property, not a choice. The NFR(edit-latency) "≤1s perceived feedback" does NOT apply to the AI path — the 15-second HTTP timeout is the hard cap. Future v2 background-worker migration hides behind the same `suggestSteps()` seam without a signature change.
+
+### Provider configuration
+
+Provider and model are env-driven:
+- `AI_PROVIDER` (default `groq`) → `config('ai.default')`
+- `AI_API_KEY` → `config('ai.providers.<provider>.key')`
+- `AI_MODEL` (default `llama-3.3-70b-versatile`) → `config('ai.step_suggestion.model')`
+
+Swapping providers is an env-only change. Note: the provider must support plain JSON-text generation — the service does NOT use structured-output (`json_schema`) response format because not all provider models support it.
+
+---
+
 ## Future evolution
 
 > Both expansions below are PRD-contemplated in the Non-Goals _"forward-compatibility note: if added in v2+, the per-user-isolation NFR must continue to hold"_ but are NOT in the v1 roadmap. These notes exist so the F-01 contract does not foreclose either path — and so S-01 does not pick a structure (e.g. a `unique` constraint that assumes one venture per user) that would block them.

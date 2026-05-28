@@ -39,7 +39,7 @@ entire product thesis fails; everything else only matters once this works.
 | ID    | Change ID                          | Outcome (user can …)                                                    | Prerequisites | PRD refs                                              | Status   |
 | ----- | ---------------------------------- | ----------------------------------------------------------------------- | ------------- | ----------------------------------------------------- | -------- |
 | F-01  | minimal-auth-and-isolation         | (foundation) email+password auth + every query scoped to the owner      | —             | FR-001, FR-002, FR-003, Access Control, NFR(isolation), NFR(pw-hash) | ready    |
-| F-02  | ai-suggestion-service              | (foundation) LLM step service wired, per-user 24h ceiling, graceful fail | F-01          | FR-008, FR-009, NFR(ai-ceiling), NFR(ai-graceful)     | proposed |
+| F-02  | ai-suggestion-service              | (foundation) LLM step service wired, per-user 24h ceiling, graceful fail | F-01          | FR-008, FR-009, NFR(ai-ceiling), NFR(ai-graceful)     | ready    |
 | S-01  | create-venture-with-ai-plan        | create a venture and see exactly 7 AI-suggested steps                   | F-01, F-02    | US-01, FR-004, FR-008, FR-006                         | proposed |
 | S-02  | edit-and-track-steps               | add / edit / delete / complete steps and see progress                   | S-01          | FR-010, FR-011, FR-012, FR-013, FR-018, NFR(edit-latency) | proposed |
 | S-03  | extend-plan-with-ai                | trigger AI to append more steps (append-only, off-metric)               | S-01, F-02    | FR-009                                                | proposed |
@@ -96,7 +96,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Confirm the LLM provider — Groq tentatively assumed (free-forever permanent tier, OpenAI-compatible API, fits the F-02 graceful-fail + 24h-ceiling NFRs cleanly). Generic `AI_API_KEY` slot will be wired into `render.yaml` when F-02 lands. Owner: user. Block: no.
 - **Risk:** Provider not yet formally chosen; treated as non-blocking because the key slot is stubbed and swapping providers behind the HTTP client is cheap. Sequenced before the AI slices so both S-01 and S-03 consume one rate-limited service instead of duplicating the integration and the 24h ceiling.
-- **Status:** proposed
+- **Status:** ready
 
 ## Slices
 
