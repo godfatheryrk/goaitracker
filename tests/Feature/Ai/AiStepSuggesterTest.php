@@ -103,10 +103,10 @@ class AiStepSuggesterTest extends TestCase
         $this->assertSame(1, $this->counterFor($user));
     }
 
-    public function test_fail_missing_api_key_returns_empty_and_increments_counter(): void
+    public function test_fail_throwable_returns_empty_and_increments_counter(): void
     {
-        // Simulates the SDK throwing when the provider has no valid key.
-        // Counter IS incremented (attempt-based) — a misconfigured key is still an attempt.
+        // Any SDK throwable maps to []; counter still increments (attempt-based).
+        // The real missing-AI_API_KEY path is covered by manual smoke check 3.6.
         StepSuggestionAgent::fake([fn () => throw new \RuntimeException('API key not provided')]);
         $user = User::factory()->create();
 

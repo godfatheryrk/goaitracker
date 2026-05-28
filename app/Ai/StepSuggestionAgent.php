@@ -4,11 +4,9 @@ namespace App\Ai;
 
 use App\Models\User;
 use Laravel\Ai\Attributes\Temperature;
-use Laravel\Ai\Attributes\Timeout;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Promptable;
 
-#[Timeout(15)]
 #[Temperature(0.7)]
 class StepSuggestionAgent implements Agent
 {
@@ -20,6 +18,11 @@ class StepSuggestionAgent implements Agent
         private string $description,
         private array $currentSteps = [],
     ) {}
+
+    public function timeout(): int
+    {
+        return config('ai.step_suggestion.timeout_seconds', 15);
+    }
 
     public function provider(): string
     {
