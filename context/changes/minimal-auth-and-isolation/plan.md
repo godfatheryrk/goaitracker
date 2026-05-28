@@ -454,31 +454,31 @@ are reused; `password_reset_tokens` is left unused (recovery is out of scope).
 
 #### Automated
 
-- [x] 1.1 Routes registered: `php artisan route:list` shows login (GET/POST), logout (POST), dashboard (GET)
-- [x] 1.2 Test suite green (smoke): `composer run test`
-- [x] 1.3 Assets build: `npm run build` exits 0
-- [x] 1.4 Formatting clean: `vendor/bin/pint --test`
+- [x] 1.1 Routes registered: `php artisan route:list` shows login (GET/POST), logout (POST), dashboard (GET) — 121978f
+- [x] 1.2 Test suite green (smoke): `composer run test` — 121978f
+- [x] 1.3 Assets build: `npm run build` exits 0 — 121978f
+- [x] 1.4 Formatting clean: `vendor/bin/pint --test` — 121978f
 
 #### Manual
 
-- [x] 1.5 Seed a user via `php artisan tinker`, log in via browser, land on `/dashboard`
-- [x] 1.6 Sign out → public page; revisit `/dashboard` → redirect to `/login`
-- [x] 1.7 Repeated bad logins trip the throttle (lockout message)
+- [x] 1.5 Seed a user via `php artisan tinker`, log in via browser, land on `/dashboard` — 121978f
+- [x] 1.6 Sign out → public page; revisit `/dashboard` → redirect to `/login` — 121978f
+- [x] 1.7 Repeated bad logins trip the throttle (lockout message) — 121978f
 
 ### Phase 2: Registration (email+password, derived name)
 
 #### Automated
 
-- [ ] 2.1 Register routes present: `php artisan route:list` shows register (GET/POST)
-- [ ] 2.2 Test suite green (smoke): `composer run test`
-- [ ] 2.3 Assets build: `npm run build` exits 0
-- [ ] 2.4 Formatting clean: `vendor/bin/pint --test`
+- [x] 2.1 Register routes present: `php artisan route:list` shows register (GET/POST)
+- [x] 2.2 Test suite green (smoke): `composer run test`
+- [x] 2.3 Assets build: `npm run build` exits 0
+- [x] 2.4 Formatting clean: `vendor/bin/pint --test`
 
 #### Manual
 
-- [ ] 2.5 Registering with email+password creates a user, logs in, lands on `/dashboard`
-- [ ] 2.6 Derived name shows in the UI greeting
-- [ ] 2.7 Duplicate email shows an inline validation error
+- [x] 2.5 Registering with email+password creates a user, logs in, lands on `/dashboard`
+- [x] 2.6 Derived name shows in the UI greeting
+- [x] 2.7 Duplicate email shows an inline validation error
 
 ### Phase 3: Auth feature tests (flows + negatives + boundary)
 
