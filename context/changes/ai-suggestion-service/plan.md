@@ -412,30 +412,30 @@ F-02's outputs only become useful once S-01 and S-03 consume them, and the conve
 
 #### Automated
 
-- [x] 1.1 composer install clean: composer install --no-dev --optimize-autoloader produces no errors
-- [x] 1.2 config/ai.php parses: php artisan config:show ai prints the expected array
-- [x] 1.3 php artisan config:clear && php artisan config:cache succeeds
-- [x] 1.4 vendor/bin/pint clean
+- [x] 1.1 composer install clean: composer install --no-dev --optimize-autoloader produces no errors — db485e6
+- [x] 1.2 config/ai.php parses: php artisan config:show ai prints the expected array — db485e6
+- [x] 1.3 php artisan config:clear && php artisan config:cache succeeds — db485e6
+- [x] 1.4 vendor/bin/pint clean — db485e6
 
 #### Manual
 
-- [x] 1.5 .env.example reads cleanly; new section is visible and order-stable
-- [x] 1.6 render.yaml validates against Render's Blueprint schema with no warnings
-- [x] 1.7 php artisan tinker confirms config('ai.provider') returns 'groq' default and provided value when set
+- [x] 1.5 .env.example reads cleanly; new section is visible and order-stable — db485e6
+- [x] 1.6 render.yaml validates against Render's Blueprint schema with no warnings — db485e6
+- [x] 1.7 php artisan tinker confirms config('ai.provider') returns 'groq' default and provided value when set — db485e6
 
 ### Phase 2: Rate-limit counter table + model + isolation test
 
 #### Automated
 
-- [ ] 2.1 Migration applies cleanly on SQLite and matches Postgres shape: php artisan migrate:fresh succeeds
-- [ ] 2.2 Unit tests pass: composer run test -- --filter=AiCallCounterIsolationTest
-- [ ] 2.3 vendor/bin/pint clean
-- [ ] 2.4 Two-user isolation test passes per the S-01 enforcement checklist
+- [x] 2.1 Migration applies cleanly on SQLite and matches Postgres shape: php artisan migrate:fresh succeeds
+- [x] 2.2 Unit tests pass: composer run test -- --filter=AiCallCounterIsolationTest
+- [x] 2.3 vendor/bin/pint clean
+- [x] 2.4 Two-user isolation test passes per the S-01 enforcement checklist
 
 #### Manual
 
-- [ ] 2.5 tinker smoke-test: two users, counter attached to one, other user's relationship returns empty
-- [ ] 2.6 Unique constraint on (owner_id, day) confirmed by duplicate-insert integrity-error path
+- [x] 2.5 tinker smoke-test: two users, counter attached to one, other user's relationship returns empty
+- [x] 2.6 Unique constraint on (owner_id, day) confirmed by duplicate-insert integrity-error path
 
 ### Phase 3: StepSuggestionAgent + AiStepSuggester service + validator
 
