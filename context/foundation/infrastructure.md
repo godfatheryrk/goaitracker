@@ -66,7 +66,7 @@ First-class `fly launch` Laravel scaffolding (auto-generates Dockerfile, `fly.to
 
 ### Devil's Advocate — Weaknesses
 
-1. **Inline AI calls block the web request.** Free Render tier has no Background Workers, so FR-008 / FR-009 AI step suggestions run on the `sync` queue driver — synchronously in the web request handler. A 10-20s OpenAI call holds the request open. The NFR "AI failure stays invisible" is fine (the user still gets the venture), but the NFR "editing feels instant (≤1s)" is **structurally unattainable on the AI path** without a background worker. Mitigation lives at the UX layer: show a skeleton/spinner for the AI path, accept that "instant" only applies to non-AI editing.
+1. **Inline AI calls block the web request.** Free Render tier has no Background Workers, so FR-008 / FR-009 AI step suggestions run on the `sync` queue driver — synchronously in the web request handler. A 10-20s LLM provider call holds the request open. The NFR "AI failure stays invisible" is fine (the user still gets the venture), but the NFR "editing feels instant (≤1s)" is **structurally unattainable on the AI path** without a background worker. Mitigation lives at the UX layer: show a skeleton/spinner for the AI path, accept that "instant" only applies to non-AI editing.
 2. **Compound cold-starts on first visit after idle.** Render free web sleeps after 15 min idle (~30-60s wake-up); Neon free-tier compute auto-suspends after 5 min idle (~1-2s wake-up on first query). The worst case is the *sum*: ~31-62s for the first request after a long idle. Lethal for public demos, tolerable for solo / beta-user workflows where the user is informed.
 3. **Vendor-split secret rotation: the connection string lives in two places.** Render env vars and Neon dashboard. Any Neon password rotation must update `DB_URL` on the Render web service. With only one Render service in scope (no worker, no cron), the rotation surface is smaller than before — but **if** scheduled tasks or workers are ever added (paid Starter), that surface grows.
 4. **Single-region service, no edge.** Frankfurt is the EU option for both Render and Neon; users elsewhere see visible latency. The NFR "editing feels instant (≤1s)" is at the budget edge for non-EU users on non-AI paths. **Critical:** Neon region MUST match Render region (both `eu-central-1` / Frankfurt) — a US-East Neon paired with Frankfurt Render adds ~120ms to every DB query and blows the NFR immediately.
@@ -79,7 +79,7 @@ The founder deployed Laravel 13+ on Render free tier with Neon Postgres for GOAI
 
 The first crack appeared two weeks in, when the first beta tester clicked the share-URL link the founder posted on Discord. The Render web service had been idle for two hours; the user waited 45 seconds on a white page, gave up, and tweeted that the app was broken. Three other invited testers saw the same screen over the next day and never returned. Free-tier sleep wasn't the *bug* — it was a property the founder had accepted in the cost spreadsheet but hadn't translated into a "don't share the URL cold" social rule.
 
-The second crack appeared a month in, when an OpenAI call for FR-008 step suggestion took 28 seconds during a peak-traffic moment. With queue=sync and no background worker on free tier, the request held the connection open past Render's idle timeout. The user saw a 502, the venture was created with zero steps, and the primary success metric (≥3 of 7 AI steps kept) registered a permanent zero for that venture. The fix — moving AI to a real background queue — required a paid Render plan, contradicting the $0/mo decision.
+The second crack appeared a month in, when an LLM provider call for FR-008 step suggestion took 28 seconds during a peak-traffic moment. With queue=sync and no background worker on free tier, the request held the connection open past Render's idle timeout. The user saw a 502, the venture was created with zero steps, and the primary success metric (≥3 of 7 AI steps kept) registered a permanent zero for that venture. The fix — moving AI to a real background queue — required a paid Render plan, contradicting the $0/mo decision.
 
 By month six, the founder had upgraded to Render Starter ($7/mo) plus a Background Worker ($7/mo) anyway, paying $14/mo to fix problems that had been baked into the v1 architecture from day one. The 2026-07-04 deadline slipped because the queue refactor blocked launch by two weeks. The $0/mo MVP cost ended up costing two weeks of velocity.
 
@@ -93,7 +93,7 @@ By month six, the founder had upgraded to Render Starter ($7/mo) plus a Backgrou
 - **Neon's connection string includes the project endpoint ID, not just a hostname.** Format is `postgres://user:pwd@ep-xxx-xxx.eu-central-1.aws.neon.tech/dbname?sslmode=require`. The `sslmode=require` segment is mandatory — Laravel's default Postgres driver respects it via the URL, but custom config that strips query params will silently break TLS.
 - **Neon free-tier compute auto-suspends after 5 minutes of inactivity.** First query after idle wakes the compute (~1-2s). For a low-traffic MVP this is invisible to active users but visible to the very first request of a session. The Neon "Launch" plan ($19/mo) disables auto-suspend if it ever becomes annoying.
 - **Render free-tier Preview Environments are NOT available.** Render Preview Environments require the Team plan or above. On the free Individual plan, only the `main` branch deploys. PR previews must be tested locally or against a separately-provisioned free preview service. Neon branching is still useful for *local* branch testing against an isolated DB.
-- **`render.yaml` Blueprints with a single service are simpler — but `sync: false` on every env var means manual setup after Blueprint provisioning.** Render won't auto-fill `DB_URL`, `APP_KEY`, or `OPENAI_API_KEY`; the dashboard will prompt for them on first apply.
+- **`render.yaml` Blueprints with a single service are simpler — but `sync: false` on every env var means manual setup after Blueprint provisioning.** Render won't auto-fill `DB_URL`, `APP_KEY`, or `AI_API_KEY`; the dashboard will prompt for them on first apply.
 - **Frankfurt region's reliability is less battle-tested in community writeups** — most Laravel-on-Render guides assume US regions. Off-the-well-trodden path means slower troubleshooting if something breaks.
 
 ## Operational Story
@@ -200,11 +200,11 @@ These steps assume Laravel 13+ on PHP 8.4 (per the user's stack pick) with a **u
    # Then in PowerShell:
    $APP_KEY      = "base64:..."   # paste output of key:generate --show
    $DB_URL = "postgres://user:pwd@ep-xxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-   $OPENAI_KEY   = "sk-..."
+   $AI_KEY       = "..."          # provider-specific token (e.g. Groq, OpenRouter); env var name kept generic as AI_API_KEY at the planning-doc level
 
    render env set "APP_KEY=$APP_KEY"             --service goaitracker-web
    render env set "DB_URL=$DB_URL"   --service goaitracker-web
-   render env set "OPENAI_API_KEY=$OPENAI_KEY"   --service goaitracker-web
+   render env set "AI_API_KEY=$AI_KEY"           --service goaitracker-web
    ```
 
 8. **Trigger the first deploy** by pushing to `main` (auto-deploy) or via `render deploys create --service goaitracker-web`. The web container starts, the start script runs `php artisan migrate --force` against Neon (creating schema), then nginx + PHP-FPM take traffic. The first build will consume ~5-15 build minutes; watch the cap.

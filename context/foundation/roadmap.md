@@ -94,7 +94,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:**
-  - Confirm the LLM provider — OpenAI assumed (the `OPENAI_API_KEY` slot is already stubbed in `render.yaml` / deploy-plan). Owner: user. Block: no.
+  - Confirm the LLM provider — Groq tentatively assumed (free-forever permanent tier, OpenAI-compatible API, fits the F-02 graceful-fail + 24h-ceiling NFRs cleanly). Generic `AI_API_KEY` slot will be wired into `render.yaml` when F-02 lands. Owner: user. Block: no.
 - **Risk:** Provider not yet formally chosen; treated as non-blocking because the key slot is stubbed and swapping providers behind the HTTP client is cheap. Sequenced before the AI slices so both S-01 and S-03 consume one rate-limited service instead of duplicating the integration and the 24h ceiling.
 - **Status:** proposed
 
@@ -189,7 +189,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 
 ## Open Roadmap Questions
 
-1. **Which LLM provider backs the AI step-suggestion service?** — Owner: user. Block: none (proceeding on OpenAI as the assumed default, since the `OPENAI_API_KEY` slot is already stubbed in `render.yaml` and the deploy plan; the framework HTTP client makes a later swap cheap). Gates the implementation detail of F-02, S-01, and S-03 if the answer changes.
+1. **Which LLM provider backs the AI step-suggestion service?** — Owner: user. Block: none (proceeding on Groq as the tentative default: OpenAI-compatible endpoint, permanent free tier with 14,400 RPD / 30 RPM that comfortably fits the F-02 24h-ceiling NFR, no credit card required. F-02 will wire a generic `AI_API_KEY` env var so a later swap to OpenRouter / OpenAI / Anthropic / Gemini is a config change, not a refactor). Gates the implementation detail of F-02, S-01, and S-03 if the answer changes.
 
 ## Parked
 

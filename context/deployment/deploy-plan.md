@@ -8,7 +8,7 @@ First production deploy of the Laravel 13.8 / PHP 8.4 GOAITracker skeleton onto 
 
 What this first deploy delivers: a publicly reachable Laravel welcome page on a Render URL, schema migrated into Neon, auto-deploy-on-push wired to `main`. It does NOT deliver FR-008/FR-009 AI features — the AI provider hasn't been picked yet (`tech-stack.md` defers that downstream); we only stub the env-var slot so the wiring is ready when the integration lands.
 
-Three small drifts from `infrastructure.md` need fixing before push: `render.yaml` uses legacy `env: docker` instead of current `runtime: docker`, lacks the production env vars that match local `.env` (SESSION/CACHE/QUEUE drivers, locale, log level), and omits the `OPENAI_API_KEY` slot. The Neon URL in `.env:67` is the direct (non-pooled) endpoint — Laravel must use the pooled one (`-pooler` in hostname) to survive Render's concurrency.
+Three small drifts from `infrastructure.md` need fixing before push: `render.yaml` uses legacy `env: docker` instead of current `runtime: docker`, lacks the production env vars that match local `.env` (SESSION/CACHE/QUEUE drivers, locale, log level), and omits the `AI_API_KEY` slot. The Neon URL in `.env:67` is the direct (non-pooled) endpoint — Laravel must use the pooled one (`-pooler` in hostname) to survive Render's concurrency.
 
 ## Already done — skip during execution
 
@@ -25,7 +25,7 @@ Three small drifts from `infrastructure.md` need fixing before push: `render.yam
 
 ### A. Local edits (the only code touched by this deploy)
 
-**A1. Update `./render.yaml`** to fix syntax drift and add missing prod env vars. Replace `env: docker` with `runtime: docker`; under `envVars` add `OPENAI_API_KEY` with `sync: false`. Keep `healthCheckPath: /` — the welcome view returns 200; a dedicated `/health` JSON endpoint is a v2 polish item, not blocking.
+**A1. Update `./render.yaml`** to fix syntax drift and add missing prod env vars. Replace `env: docker` with `runtime: docker`; under `envVars` add `AI_API_KEY` with `sync: false` (generic placeholder name; the actual provider-specific env var — e.g. `GROQ_API_KEY` — may replace it when F-02 wires the integration). Keep `healthCheckPath: /` — the welcome view returns 200; a dedicated `/health` JSON endpoint is a v2 polish item, not blocking.
 
 **A2. Update the comment in `./.env:67`** to use the pooled Neon URL format as documentation (the `-pooler` hostname). This is comment-only; local dev stays on SQLite (`DB_CONNECTION=sqlite` at line 23). Format reference:
 
@@ -76,7 +76,7 @@ Copy the `base64:...` output. Do NOT modify local `.env` (different key for prod
     - `APP_KEY` = base64 string from step E
     - `DB_URL` = pooled Neon URL from step D
     - `APP_URL` = placeholder `https://goaitracker.onrender.com` for now; update after first deploy with the real assigned URL if it differs
-    - `OPENAI_API_KEY` = leave blank for now (will be set when FR-008/009 AI work begins)
+    - `AI_API_KEY` = leave blank for now (will be set when FR-008/009 AI work begins; the eventual env var name may swap to the provider-specific one — e.g. `GROQ_API_KEY` — at F-02 time)
 4. Click **Apply**. Render queues the first build.
 
 ### G. First deploy — automatic after Apply
@@ -104,7 +104,7 @@ After execution, append a brief "Execution log" section to this file capturing:
 
 ## Critical files
 
-- `./render.yaml` — edits in A1 (runtime syntax + missing prod env vars + OPENAI_API_KEY slot)
+- `./render.yaml` — edits in A1 (runtime syntax + missing prod env vars + AI_API_KEY slot)
 - `./.env` — line 67 comment update only (A2)
 - `./deployment\deploy-plan.md` — this file (extended in I post-execution)
 
@@ -131,7 +131,7 @@ The deploy is successful when **all** of the following are true:
 
 ## Out of scope for this first deploy
 
-- Wiring an OpenAI / LLM provider for FR-008/009 (deferred — AI provider not picked yet)
+- Wiring the LLM provider for FR-008/009 (deferred — Groq tentatively assumed; final choice and provider-specific config happen in F-02)
 - Implementing the AI usage NFR rate-limit table (deferred — no AI calls yet)
 - Building a dedicated `/health` JSON endpoint (v2 polish; `/` welcome is fine for now)
 - Adding a GitHub Actions keep-warm pinger (only needed if/when cold-start becomes a UX blocker for beta users — `infrastructure.md` risk register row 1 mitigation)
