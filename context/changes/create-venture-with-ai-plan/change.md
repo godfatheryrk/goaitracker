@@ -1,7 +1,7 @@
 ---
 change_id: create-venture-with-ai-plan
 title: Create venture with AI plan
-status: implementing
+status: implemented
 created: 2026-05-28
 updated: 2026-05-28
 archived_at: null

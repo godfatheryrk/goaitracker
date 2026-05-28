@@ -325,11 +325,11 @@ The six tests above. AI is faked at the container boundary (`$this->app->bind(Ai
 
 #### Automated
 
-- [x] 3.1 All six feature tests pass: `composer run test`
-- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 3.3 `php artisan route:list` shows exactly the four `ventures.*` + `dashboard` routes added by this slice (no unintended additions)
+- [x] 3.1 All six feature tests pass: `composer run test` — 00cdcf6
+- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test` — 00cdcf6
+- [x] 3.3 `php artisan route:list` shows exactly the four `ventures.*` + `dashboard` routes added by this slice (no unintended additions) — 00cdcf6
 
 #### Manual
 
-- [x] 3.4 `docs/reference/contract-surfaces.md` "Venture surface (S-01)" reads sensibly with working file:line references and S-01 checklist items crossed off
-- [x] 3.5 `context/foundation/roadmap.md` S-01 row is `done` in the table and the slice block
+- [x] 3.4 `docs/reference/contract-surfaces.md` "Venture surface (S-01)" reads sensibly with working file:line references and S-01 checklist items crossed off — 00cdcf6
+- [x] 3.5 `context/foundation/roadmap.md` S-01 row is `done` in the table and the slice block — 00cdcf6
