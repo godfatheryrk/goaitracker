@@ -1,7 +1,7 @@
 services:
   - type: web
     name: goaitracker
-    env: docker
+    runtime: docker
     plan: free
     region: frankfurt
     branch: main
@@ -23,4 +23,10 @@ services:
       - key: DB_URL
         sync: false
       - key: APP_URL
+        sync: false
+      - key: AI_PROVIDER
+        value: groq
+      - key: AI_MODEL
+        value: llama-3.3-70b-versatile
+      - key: AI_API_KEY
         sync: false

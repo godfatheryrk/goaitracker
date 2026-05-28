@@ -1,7 +1,7 @@
 ---
 change_id: ai-suggestion-service
 title: Ai suggestion service
-status: planned
+status: implementing
 created: 2026-05-28
 updated: 2026-05-28
 archived_at: null

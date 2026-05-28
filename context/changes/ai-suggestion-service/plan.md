@@ -412,16 +412,16 @@ F-02's outputs only become useful once S-01 and S-03 consume them, and the conve
 
 #### Automated
 
-- [ ] 1.1 composer install clean: composer install --no-dev --optimize-autoloader produces no errors
-- [ ] 1.2 config/ai.php parses: php artisan config:show ai prints the expected array
-- [ ] 1.3 php artisan config:clear && php artisan config:cache succeeds
-- [ ] 1.4 vendor/bin/pint clean
+- [x] 1.1 composer install clean: composer install --no-dev --optimize-autoloader produces no errors
+- [x] 1.2 config/ai.php parses: php artisan config:show ai prints the expected array
+- [x] 1.3 php artisan config:clear && php artisan config:cache succeeds
+- [x] 1.4 vendor/bin/pint clean
 
 #### Manual
 
-- [ ] 1.5 .env.example reads cleanly; new section is visible and order-stable
-- [ ] 1.6 render.yaml validates against Render's Blueprint schema with no warnings
-- [ ] 1.7 php artisan tinker confirms config('ai.provider') returns 'groq' default and provided value when set
+- [x] 1.5 .env.example reads cleanly; new section is visible and order-stable
+- [x] 1.6 render.yaml validates against Render's Blueprint schema with no warnings
+- [x] 1.7 php artisan tinker confirms config('ai.provider') returns 'groq' default and provided value when set
 
 ### Phase 2: Rate-limit counter table + model + isolation test
 
