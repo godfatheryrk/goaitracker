@@ -455,12 +455,12 @@ F-02's outputs only become useful once S-01 and S-03 consume them, and the conve
 
 #### Automated
 
-- [x] 4.1 Markdown anchor links in the contract-surfaces entry resolve
-- [x] 4.2 vendor/bin/pint (or doc linter) reports no errors
-- [x] 4.3 Spell-check on new sections clean
+- [x] 4.1 Markdown anchor links in the contract-surfaces entry resolve — 9b122a9
+- [x] 4.2 vendor/bin/pint (or doc linter) reports no errors — 9b122a9
+- [x] 4.3 Spell-check on new sections clean — 9b122a9
 
 #### Manual
 
-- [x] 4.4 contract-surfaces.md entry is self-sufficient — a reader can call the service correctly without opening F-02's plan
-- [x] 4.5 Lessons entry would catch a hypothetical S-03 PR that throws across the service boundary or increments after the call
-- [x] 4.6 Roadmap F-02 status updated consistently with merge state
+- [x] 4.4 contract-surfaces.md entry is self-sufficient — a reader can call the service correctly without opening F-02's plan — 9b122a9
+- [x] 4.5 Lessons entry would catch a hypothetical S-03 PR that throws across the service boundary or increments after the call — 9b122a9
+- [x] 4.6 Roadmap F-02 status updated consistently with merge state — 9b122a9
