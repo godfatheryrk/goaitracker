@@ -427,29 +427,29 @@ F-02's outputs only become useful once S-01 and S-03 consume them, and the conve
 
 #### Automated
 
-- [x] 2.1 Migration applies cleanly on SQLite and matches Postgres shape: php artisan migrate:fresh succeeds
-- [x] 2.2 Unit tests pass: composer run test -- --filter=AiCallCounterIsolationTest
-- [x] 2.3 vendor/bin/pint clean
-- [x] 2.4 Two-user isolation test passes per the S-01 enforcement checklist
+- [x] 2.1 Migration applies cleanly on SQLite and matches Postgres shape: php artisan migrate:fresh succeeds — 0ad49ac
+- [x] 2.2 Unit tests pass: composer run test -- --filter=AiCallCounterIsolationTest — 0ad49ac
+- [x] 2.3 vendor/bin/pint clean — 0ad49ac
+- [x] 2.4 Two-user isolation test passes per the S-01 enforcement checklist — 0ad49ac
 
 #### Manual
 
-- [x] 2.5 tinker smoke-test: two users, counter attached to one, other user's relationship returns empty
-- [x] 2.6 Unique constraint on (owner_id, day) confirmed by duplicate-insert integrity-error path
+- [x] 2.5 tinker smoke-test: two users, counter attached to one, other user's relationship returns empty — 0ad49ac
+- [x] 2.6 Unique constraint on (owner_id, day) confirmed by duplicate-insert integrity-error path — 0ad49ac
 
 ### Phase 3: StepSuggestionAgent + AiStepSuggester service + validator
 
 #### Automated
 
-- [ ] 3.1 All Phase 3 feature tests pass: composer run test -- --filter=AiStepSuggesterTest
-- [ ] 3.2 composer run test (entire suite) passes including F-01 tests
-- [ ] 3.3 vendor/bin/pint clean
-- [ ] 3.4 No new lint warnings in app/Ai/, app/Services/, tests/Feature/Ai/
+- [x] 3.1 All Phase 3 feature tests pass: composer run test -- --filter=AiStepSuggesterTest
+- [x] 3.2 composer run test (entire suite) passes including F-01 tests
+- [x] 3.3 vendor/bin/pint clean
+- [x] 3.4 No new lint warnings in app/Ai/, app/Services/, tests/Feature/Ai/
 
 #### Manual
 
-- [ ] 3.5 Live-Groq tinker smoke-check returns 7 strings for a sample venture
-- [ ] 3.6 Cold/no-key tinker path returns [] and logs one warning
+- [x] 3.5 Live-Groq tinker smoke-check returns 7 strings for a sample venture
+- [x] 3.6 Cold/no-key tinker path returns [] and logs one warning
 
 ### Phase 4: Cross-slice handoff documentation
 
