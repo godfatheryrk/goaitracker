@@ -299,13 +299,13 @@ The six tests above. AI is faked at the container boundary (`$this->app->bind(Ai
 
 #### Automated
 
-- [ ] 1.1 Migrations apply cleanly: `php artisan migrate:fresh`
-- [ ] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 1.3 Existing test suite still green: `composer run test`
+- [x] 1.1 Migrations apply cleanly: `php artisan migrate:fresh`
+- [x] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 1.3 Existing test suite still green: `composer run test`
 
 #### Manual
 
-- [ ] 1.4 Tinker cascade smoke confirms `Venture::count() === 0` and `Step::count() === 0` after deleting the parent user
+- [x] 1.4 Tinker cascade smoke confirms `Venture::count() === 0` and `Step::count() === 0` after deleting the parent user
 
 ### Phase 2: Create-venture flow + read-only detail view
 

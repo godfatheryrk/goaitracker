@@ -35,4 +35,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(AiCallCounter::class, 'owner_id');
     }
+
+    public function ventures(): HasMany
+    {
+        return $this->hasMany(Venture::class, 'owner_id');
+    }
 }
