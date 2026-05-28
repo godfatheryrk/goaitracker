@@ -484,27 +484,27 @@ are reused; `password_reset_tokens` is left unused (recovery is out of scope).
 
 #### Automated
 
-- [x] 3.1 Registration tests pass (success + derived name + negatives): `composer run test`
-- [x] 3.2 Login success/failure + throttle-after-N-attempts tests pass
-- [x] 3.3 Logout + guest-redirect-to-login + authed-can-reach-dashboard tests pass
-- [x] 3.4 Formatting clean: `vendor/bin/pint --test`
+- [x] 3.1 Registration tests pass (success + derived name + negatives): `composer run test` — 09ce79b
+- [x] 3.2 Login success/failure + throttle-after-N-attempts tests pass — 09ce79b
+- [x] 3.3 Logout + guest-redirect-to-login + authed-can-reach-dashboard tests pass — 09ce79b
+- [x] 3.4 Formatting clean: `vendor/bin/pint --test` — 09ce79b
 
 #### Manual
 
-- [x] 3.5 `composer run test` output shows the new auth test files executing and passing
-- [x] 3.6 Test names read as a clear spec of the auth surface
+- [x] 3.5 `composer run test` output shows the new auth test files executing and passing — 09ce79b
+- [x] 3.6 Test names read as a clear spec of the auth surface — 09ce79b
 
 ### Phase 4: Isolation convention as durable contract
 
 #### Automated
 
-- [ ] 4.1 Convention doc exists: `test -f docs/reference/contract-surfaces.md`
-- [ ] 4.2 Lessons file exists: `test -f context/foundation/lessons.md`
-- [ ] 4.3 AGENTS.md carries the isolation rule above the BEGIN marker
-- [ ] 4.4 No code/test regressions: `composer run test`
+- [x] 4.1 Convention doc exists: `test -f docs/reference/contract-surfaces.md`
+- [x] 4.2 Lessons file exists: `test -f context/foundation/lessons.md`
+- [x] 4.3 AGENTS.md carries the isolation rule above the BEGIN marker
+- [x] 4.4 No code/test regressions: `composer run test`
 
 #### Manual
 
-- [ ] 4.5 Convention doc names the user_id FK rule, the relationship-access rule, and the auth boundary
-- [ ] 4.6 S-01 checklist is concrete enough to implement the first model with a two-user isolation test
-- [ ] 4.7 AGENTS.md edit sits above the toolkit BEGIN marker
+- [x] 4.5 Convention doc names the user_id FK rule, the relationship-access rule, and the auth boundary
+- [x] 4.6 S-01 checklist is concrete enough to implement the first model with a two-user isolation test
+- [x] 4.7 AGENTS.md edit sits above the toolkit BEGIN marker
