@@ -61,7 +61,7 @@ land with owner-scoping proven by test.
 Verification: `composer run test` is green (auth flow, negative, throttle, and
 guest-redirect feature tests pass); `vendor/bin/pint --test` is clean; `php artisan
 route:list` shows only `register`/`login`/`logout` + `dashboard`; the four
-convention artifacts exist and name the `user_id` FK rule, the relationship-access
+convention artifacts exist and name the `owner_id` (~~`user_id`~~) FK rule, the relationship-access
 rule, and the S-01 checklist.
 
 ## What We're NOT Doing
@@ -331,6 +331,13 @@ so every later slice and every AI agent inherits it explicitly — and define th
 S-01 enforcement checklist that makes the first domain model land with owner-scoping
 proven by test.
 
+> **Implementation note (post-review).** The plan originally named the per-user FK
+> as `user_id`; during implementation the convention crystallized to `owner_id` to
+> keep `user_id` available for v3+ membership-pivot semantics. The remainder of
+> this phase uses `owner_id` (~~`user_id`~~) with the original wording struck
+> through inline so the audit trail is preserved. The canonical naming rationale
+> lives in `docs/reference/contract-surfaces.md` (`owner_id` ≠ `user_id`).
+
 ### Changes Required:
 
 #### 1. Create the contract-surfaces registry
@@ -339,11 +346,12 @@ proven by test.
 
 **Intent**: Register the load-bearing names and rules this slice establishes so they
 aren't silently broken later: the `auth` middleware boundary, the
-relationship-access convention, and the `user_id` foreign-key naming rule for all
-future per-user tables.
+relationship-access convention, and the `owner_id` (~~`user_id`~~) foreign-key
+naming rule for all future per-user tables.
 
-**Contract**: The doc states (a) every per-user domain table MUST carry a `user_id`
-foreign key with cascade-on-delete; (b) user-facing controllers MUST reach domain
+**Contract**: The doc states (a) every per-user domain table MUST carry an
+`owner_id` (~~`user_id`~~) foreign key with cascade-on-delete; (b) user-facing
+controllers MUST reach domain
 data via the authenticated-user relationship (`$request->user()->ventures()`), never
 via a global query (`Venture::find(...)`); (c) route-model binding for owned
 resources MUST be ownership-scoped; (d) the `auth` middleware is the authentication
@@ -379,7 +387,7 @@ from it.
 **Intent**: Make the deferred owner-scoping proof concrete so S-01 can't skip it.
 
 **Contract**: A checklist S-01 must satisfy when adding the first domain model
-(Venture): (1) `user_id` FK on the table; (2) `User hasMany` relationship defined;
+(Venture): (1) `owner_id` (~~`user_id`~~) FK on the table; (2) `User hasMany` relationship defined;
 (3) controllers access via `$request->user()->ventures()`; (4) a feature test
 creating two users that asserts user A cannot read/update/delete user B's venture
 (404/403); (5) ownership-scoped route-model binding.
@@ -395,7 +403,7 @@ creating two users that asserts user A cannot read/update/delete user B's ventur
 
 #### Manual Verification:
 
-- [ ] The convention doc names the `user_id` FK rule, the relationship-access rule, and the `auth` boundary
+- [ ] The convention doc names the `owner_id` (~~`user_id`~~) FK rule, the relationship-access rule, and the `auth` boundary
 - [ ] The S-01 checklist is concrete enough that a reader can implement S-01's first model with isolation proven by a two-user test
 - [ ] AGENTS.md edit is above the toolkit BEGIN marker (won't be overwritten by toolkit updates)
 

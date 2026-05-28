@@ -1,7 +1,7 @@
 ---
 change_id: minimal-auth-and-isolation
 title: Minimal auth and per-user isolation
-status: implemented
+status: impl_reviewed
 created: 2026-05-27
 updated: 2026-05-28
 archived_at: null
