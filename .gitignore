@@ -5,6 +5,7 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
+/.claude/
 /.codex
 /.cursor/
 /.idea
@@ -19,6 +20,7 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/framework/cache/
 /storage/pail
 /vendor
 _ide_helper.php

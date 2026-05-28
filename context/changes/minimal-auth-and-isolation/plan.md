@@ -469,30 +469,30 @@ are reused; `password_reset_tokens` is left unused (recovery is out of scope).
 
 #### Automated
 
-- [x] 2.1 Register routes present: `php artisan route:list` shows register (GET/POST)
-- [x] 2.2 Test suite green (smoke): `composer run test`
-- [x] 2.3 Assets build: `npm run build` exits 0
-- [x] 2.4 Formatting clean: `vendor/bin/pint --test`
+- [x] 2.1 Register routes present: `php artisan route:list` shows register (GET/POST) — bd9a30d
+- [x] 2.2 Test suite green (smoke): `composer run test` — bd9a30d
+- [x] 2.3 Assets build: `npm run build` exits 0 — bd9a30d
+- [x] 2.4 Formatting clean: `vendor/bin/pint --test` — bd9a30d
 
 #### Manual
 
-- [x] 2.5 Registering with email+password creates a user, logs in, lands on `/dashboard`
-- [x] 2.6 Derived name shows in the UI greeting
-- [x] 2.7 Duplicate email shows an inline validation error
+- [x] 2.5 Registering with email+password creates a user, logs in, lands on `/dashboard` — bd9a30d
+- [x] 2.6 Derived name shows in the UI greeting — bd9a30d
+- [x] 2.7 Duplicate email shows an inline validation error — bd9a30d
 
 ### Phase 3: Auth feature tests (flows + negatives + boundary)
 
 #### Automated
 
-- [ ] 3.1 Registration tests pass (success + derived name + negatives): `composer run test`
-- [ ] 3.2 Login success/failure + throttle-after-N-attempts tests pass
-- [ ] 3.3 Logout + guest-redirect-to-login + authed-can-reach-dashboard tests pass
-- [ ] 3.4 Formatting clean: `vendor/bin/pint --test`
+- [x] 3.1 Registration tests pass (success + derived name + negatives): `composer run test`
+- [x] 3.2 Login success/failure + throttle-after-N-attempts tests pass
+- [x] 3.3 Logout + guest-redirect-to-login + authed-can-reach-dashboard tests pass
+- [x] 3.4 Formatting clean: `vendor/bin/pint --test`
 
 #### Manual
 
-- [ ] 3.5 `composer run test` output shows the new auth test files executing and passing
-- [ ] 3.6 Test names read as a clear spec of the auth surface
+- [x] 3.5 `composer run test` output shows the new auth test files executing and passing
+- [x] 3.6 Test names read as a clear spec of the auth surface
 
 ### Phase 4: Isolation convention as durable contract
 
