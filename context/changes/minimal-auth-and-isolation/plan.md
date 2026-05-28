@@ -498,13 +498,13 @@ are reused; `password_reset_tokens` is left unused (recovery is out of scope).
 
 #### Automated
 
-- [x] 4.1 Convention doc exists: `test -f docs/reference/contract-surfaces.md`
-- [x] 4.2 Lessons file exists: `test -f context/foundation/lessons.md`
-- [x] 4.3 AGENTS.md carries the isolation rule above the BEGIN marker
-- [x] 4.4 No code/test regressions: `composer run test`
+- [x] 4.1 Convention doc exists: `test -f docs/reference/contract-surfaces.md` — b3a8e90
+- [x] 4.2 Lessons file exists: `test -f context/foundation/lessons.md` — b3a8e90
+- [x] 4.3 AGENTS.md carries the isolation rule above the BEGIN marker — b3a8e90
+- [x] 4.4 No code/test regressions: `composer run test` — b3a8e90
 
 #### Manual
 
-- [x] 4.5 Convention doc names the user_id FK rule, the relationship-access rule, and the auth boundary
-- [x] 4.6 S-01 checklist is concrete enough to implement the first model with a two-user isolation test
-- [x] 4.7 AGENTS.md edit sits above the toolkit BEGIN marker
+- [x] 4.5 Convention doc names the user_id FK rule, the relationship-access rule, and the auth boundary — b3a8e90
+- [x] 4.6 S-01 checklist is concrete enough to implement the first model with a two-user isolation test — b3a8e90
+- [x] 4.7 AGENTS.md edit sits above the toolkit BEGIN marker — b3a8e90
