@@ -299,27 +299,27 @@ The six tests above. AI is faked at the container boundary (`$this->app->bind(Ai
 
 #### Automated
 
-- [x] 1.1 Migrations apply cleanly: `php artisan migrate:fresh`
-- [x] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 1.3 Existing test suite still green: `composer run test`
+- [x] 1.1 Migrations apply cleanly: `php artisan migrate:fresh` — 2775a36
+- [x] 1.2 Linting / formatting passes: `vendor/bin/pint --test` — 2775a36
+- [x] 1.3 Existing test suite still green: `composer run test` — 2775a36
 
 #### Manual
 
-- [x] 1.4 Tinker cascade smoke confirms `Venture::count() === 0` and `Step::count() === 0` after deleting the parent user
+- [x] 1.4 Tinker cascade smoke confirms `Venture::count() === 0` and `Step::count() === 0` after deleting the parent user — 2775a36
 
 ### Phase 2: Create-venture flow + read-only detail view
 
 #### Automated
 
-- [ ] 2.1 `php artisan route:list` shows `dashboard`, `ventures.create`, `ventures.store`, `ventures.show` under the `auth` middleware
-- [ ] 2.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 2.3 Existing test suite still green: `composer run test`
+- [x] 2.1 `php artisan route:list` shows `dashboard`, `ventures.create`, `ventures.store`, `ventures.show` under the `auth` middleware
+- [x] 2.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 2.3 Existing test suite still green: `composer run test`
 
 #### Manual
 
-- [ ] 2.4 Register a fresh user → `/dashboard` renders the create form
-- [ ] 2.5 Submit a venture with title "learn welding" + description "MIG and TIG basics" → land on `/ventures/{id}` showing 7 steps
-- [ ] 2.6 Submit a title-only venture (no description) → same flow; venture exists with 0 or 7 steps depending on AI behaviour
+- [x] 2.4 Register a fresh user → `/dashboard` renders the create form
+- [x] 2.5 Submit a venture with title "learn welding" + description "MIG and TIG basics" → land on `/ventures/{id}` showing 7 steps
+- [x] 2.6 Submit a title-only venture (no description) → same flow; venture exists with 0 or 7 steps depending on AI behaviour
 
 ### Phase 3: Feature-test matrix + cross-slice handoff
 
