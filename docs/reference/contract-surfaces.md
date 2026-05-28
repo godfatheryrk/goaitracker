@@ -30,12 +30,12 @@ F-01 establishes the convention but does NOT install a global scope, trait, or r
 
 When S-01 (or any slice introducing the first / a new per-user domain model — Venture, Step, Expense) adds a model, the slice's plan MUST satisfy all of the following before it can merge:
 
-- [ ] **Schema**: the new table's create migration declares `foreignId('owner_id')->constrained('users')->cascadeOnDelete()` — explicit `'users'` because the column→table inference would otherwise look up `owners`.
-- [ ] **Model relationships**: `User` declares `hasMany(Venture::class, 'owner_id')` named to match the domain (`ventures()`, `expenses()`, …), and the new model declares the inverse `belongsTo(User::class, 'owner_id')` (typically named `owner()`). The explicit FK name is required because the column is `owner_id`, not the `user_id` Laravel would assume by default.
-- [ ] **Controller access path**: every authenticated controller action that reads/writes the new model goes through `$request->user()->ventures()` (or equivalent). No bare `Venture::find(...)` / `Venture::where(...)` in authenticated controllers.
-- [ ] **Two-user isolation feature test**: a feature test creates two users (A and B), creates a venture as A, and asserts user B cannot read, update, or delete it — expecting **404** from the relationship-scoped path (not 403, which would leak existence). The test also asserts a guest gets a 302 to `/login` (re-confirms the `auth` boundary).
-- [ ] **Ownership-scoped route-model binding**: routes that take the new model as a parameter resolve it through the user relationship, not via a global `findOrFail`. The two-user test exercises this surface.
-- [ ] **Plan reference**: the slice's plan links to this section and notes each item explicitly in its Progress block.
+- [x] **Schema**: the new table's create migration declares `foreignId('owner_id')->constrained('users')->cascadeOnDelete()` — explicit `'users'` because the column→table inference would otherwise look up `owners`. _Satisfied by S-01_: `database/migrations/2026_05_28_210000_create_ventures_table.php:13`, `database/migrations/2026_05_28_210001_create_steps_table.php:14`.
+- [x] **Model relationships**: `User` declares `hasMany(Venture::class, 'owner_id')` named to match the domain (`ventures()`, `expenses()`, …), and the new model declares the inverse `belongsTo(User::class, 'owner_id')` (typically named `owner()`). The explicit FK name is required because the column is `owner_id`, not the `user_id` Laravel would assume by default. _Satisfied by S-01_: `app/Models/User.php:39` (`ventures()`), `app/Models/Venture.php:13` (`owner()`), `app/Models/Step.php:27` (`owner()`).
+- [x] **Controller access path**: every authenticated controller action that reads/writes the new model goes through `$request->user()->ventures()` (or equivalent). No bare `Venture::find(...)` / `Venture::where(...)` in authenticated controllers. _Satisfied by S-01_: `app/Http/Controllers/VenturesController.php` — `store` writes via `$user->ventures()->create()` + `$venture->steps()->create()`; `show` reads via `$request->user()->ventures()->with('steps')->findOrFail(...)`.
+- [x] **Two-user isolation feature test**: a feature test creates two users (A and B), creates a venture as A, and asserts user B cannot read, update, or delete it — expecting **404** from the relationship-scoped path (not 403, which would leak existence). The test also asserts a guest gets a 302 to `/login` (re-confirms the `auth` boundary). _Satisfied by S-01_: `tests/Feature/Ventures/VentureIsolationTest.php` (`test_user_b_gets_404_on_user_a_venture_show`, `test_guest_gets_redirect_on_venture_show`) plus `tests/Feature/Ventures/CreateVentureTest.php::test_guest_post_redirects_to_login` for the store-side boundary.
+- [x] **Ownership-scoped route-model binding**: routes that take the new model as a parameter resolve it through the user relationship, not via a global `findOrFail`. The two-user test exercises this surface. _Satisfied by S-01_: `routes/web.php` registers `ventures/{venture}` with `whereNumber('venture')` as a plain integer parameter; `VenturesController::show` resolves it via `$request->user()->ventures()->...->findOrFail(...)` (no global `findOrFail`, no model binding on the route).
+- [x] **Plan reference**: the slice's plan links to this section and notes each item explicitly in its Progress block. _Satisfied by S-01_: `context/changes/create-venture-with-ai-plan/plan.md` (Phase 1 + Phase 2 + Phase 3 changes reference this checklist by item number).
 
 If any item is missing when S-01 reaches `/10x-plan-review`, the reviewer MUST block on it. The cost of catching a cross-user leak in F-01's downstream slice is cheap; the cost of catching it in production after multiple ventures and expenses have flowed through the wrong path is not.
 
@@ -96,6 +96,54 @@ Provider and model are env-driven:
 - `AI_MODEL` (default `llama-3.3-70b-versatile`) → `config('ai.step_suggestion.model')`
 
 Swapping providers is an env-only change. Note: the provider must support plain JSON-text generation — the service does NOT use structured-output (`json_schema`) response format because not all provider models support it.
+
+---
+
+## Venture surface (S-01)
+
+**Established by**: S-01 (`context/changes/create-venture-with-ai-plan/`).
+
+**PRD anchors**: US-01, FR-004 (create venture from title + description), FR-006 (single-venture unified view), FR-008 (exactly 7 AI-initial steps), NFR(isolation), NFR(ai-graceful).
+
+### Routes (all under the `auth` middleware)
+
+- `dashboard` (GET) — post-login landing surface. Currently aliased to `ventures.create` so existing `route('dashboard')` callers (`RegisteredUserController::store`, `LoginRequest`) keep working without an edit. When S-04 lands and the dashboard concept becomes the venture list, the `dashboard` route name reassigns; `ventures.create` stays.
+- `ventures.create` (GET `/ventures/create`) — canonical name for the create form. Same handler as `dashboard`.
+- `ventures.store` (POST `/ventures`) — validates `CreateVentureRequest`, calls `AiStepSuggester::suggestSteps()` OUTSIDE a DB transaction (so a failed venture-insert cannot roll back the counter increment for an AI attempt that really happened), then persists `Venture` + 0-or-7 `Step` rows inside a transaction, then redirects to `ventures.show`.
+- `ventures.show` (GET `/ventures/{venture}`, `whereNumber('venture')`) — read-only render of title, description, and step list in `position` order. AI-unavailable flash notice renders above the step list when `session('ai_unavailable')` is set.
+
+### Access path rule (realization of the F-01 contract)
+
+Every authenticated controller action on the venture surface MUST reach the model through `$request->user()->ventures()`. The `show` action resolves `int $venture` via `$request->user()->ventures()->with('steps')->findOrFail($venture)` — this is the mechanism that produces 404 (not 403) for a foreign user, because the relationship-scoped query simply finds no row. No global `findOrFail(Venture::class)`, no `Route::bind('venture', …)`, no global scope on the model. The same rule applies to S-02 / S-03 / S-04 / S-05 / S-06 when they extend this surface.
+
+### Step `source` enum (FR-008 primary-metric AI pool snapshot)
+
+The `steps.source` column is a string with three valid values, declared as class constants on `App\Models\Step`:
+
+- `Step::SOURCE_AI_INITIAL` (`'ai_initial'`) — written by `VenturesController::store` for each of the 7 steps that `AiStepSuggester::suggestSteps()` returned at venture creation. **This is the frozen denominator for the PRD primary metric** ("≥3 of 7 AI-initial steps kept, verbatim or edited"). S-02's edit / delete must preserve this value across edits; S-04's venture delete cascades the rows so the snapshot disappears with its parent.
+- `Step::SOURCE_AI_EXTENSION` (`'ai_extension'`) — reserved for S-03 (AI-extend-on-demand). No code path in S-01 writes this value. Steps added via the FR-009 extension trigger carry this source and are excluded from the FR-008 metric.
+- `Step::SOURCE_MANUAL` (`'manual'`) — reserved for S-02 (manual add-step). No code path in S-01 writes this value. Excluded from the FR-008 metric.
+
+The values are string-typed (not native DB enum) for SQLite/Postgres portability; the model constants are the source of truth for valid values.
+
+### AI failure contract (NFR(ai-graceful) realization)
+
+`AiStepSuggester::suggestSteps()` returns `[]` on every failure mode. The store action treats `[]` as "AI unavailable, proceed manually": the venture is still persisted (with 0 steps) and a flash key `ai_unavailable` carrying the user-facing message is set on the session, surfaced by the show view as a non-blocking amber notice (never red — it is not an error). There is no 500, no error banner, no retry affordance.
+
+### Test proof
+
+- `tests/Feature/Ventures/CreateVentureTest.php` — 4 tests covering happy path (7 `ai_initial` steps persisted with `position` 0–6), AI failure (0 steps + flash), validation (missing title → 422 + zero ventures), and guest boundary (POST → 302 to `/login`). The `AiStepSuggester` is faked via `$this->mock(AiStepSuggester::class, …)` — no Groq calls in CI.
+- `tests/Feature/Ventures/VentureIsolationTest.php` — 2 tests proving the F-01 S-01 enforcement checklist items 4 + 5 (two-user 404, guest 302 on the show route).
+
+### Out of scope for S-01 (deferred to downstream slices)
+
+- Step edit / delete / completion toggle / manual add → **S-02**.
+- AI extension trigger (`FR-009`) → **S-03**.
+- Venture list / venture delete UI → **S-04**.
+- Deadlines on steps + the 3-day badge / list-level marker → **S-05**.
+- Expenses → **S-06**.
+
+S-01 deliberately does not pre-build any of those surfaces; downstream slices add them under the same access-path rule.
 
 ---
 

@@ -311,25 +311,25 @@ The six tests above. AI is faked at the container boundary (`$this->app->bind(Ai
 
 #### Automated
 
-- [x] 2.1 `php artisan route:list` shows `dashboard`, `ventures.create`, `ventures.store`, `ventures.show` under the `auth` middleware
-- [x] 2.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 2.3 Existing test suite still green: `composer run test`
+- [x] 2.1 `php artisan route:list` shows `dashboard`, `ventures.create`, `ventures.store`, `ventures.show` under the `auth` middleware — 1499752
+- [x] 2.2 Linting / formatting passes: `vendor/bin/pint --test` — 1499752
+- [x] 2.3 Existing test suite still green: `composer run test` — 1499752
 
 #### Manual
 
-- [x] 2.4 Register a fresh user → `/dashboard` renders the create form
-- [x] 2.5 Submit a venture with title "learn welding" + description "MIG and TIG basics" → land on `/ventures/{id}` showing 7 steps
-- [x] 2.6 Submit a title-only venture (no description) → same flow; venture exists with 0 or 7 steps depending on AI behaviour
+- [x] 2.4 Register a fresh user → `/dashboard` renders the create form — 1499752
+- [x] 2.5 Submit a venture with title "learn welding" + description "MIG and TIG basics" → land on `/ventures/{id}` showing 7 steps — 1499752
+- [x] 2.6 Submit a title-only venture (no description) → same flow; venture exists with 0 or 7 steps depending on AI behaviour — 1499752
 
 ### Phase 3: Feature-test matrix + cross-slice handoff
 
 #### Automated
 
-- [ ] 3.1 All six feature tests pass: `composer run test`
-- [ ] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 3.3 `php artisan route:list` shows exactly the four `ventures.*` + `dashboard` routes added by this slice (no unintended additions)
+- [x] 3.1 All six feature tests pass: `composer run test`
+- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 3.3 `php artisan route:list` shows exactly the four `ventures.*` + `dashboard` routes added by this slice (no unintended additions)
 
 #### Manual
 
-- [ ] 3.4 `docs/reference/contract-surfaces.md` "Venture surface (S-01)" reads sensibly with working file:line references and S-01 checklist items crossed off
-- [ ] 3.5 `context/foundation/roadmap.md` S-01 row is `done` in the table and the slice block
+- [x] 3.4 `docs/reference/contract-surfaces.md` "Venture surface (S-01)" reads sensibly with working file:line references and S-01 checklist items crossed off
+- [x] 3.5 `context/foundation/roadmap.md` S-01 row is `done` in the table and the slice block
