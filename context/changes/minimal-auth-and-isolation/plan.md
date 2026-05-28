@@ -454,16 +454,16 @@ are reused; `password_reset_tokens` is left unused (recovery is out of scope).
 
 #### Automated
 
-- [ ] 1.1 Routes registered: `php artisan route:list` shows login (GET/POST), logout (POST), dashboard (GET)
-- [ ] 1.2 Test suite green (smoke): `composer run test`
-- [ ] 1.3 Assets build: `npm run build` exits 0
-- [ ] 1.4 Formatting clean: `vendor/bin/pint --test`
+- [x] 1.1 Routes registered: `php artisan route:list` shows login (GET/POST), logout (POST), dashboard (GET)
+- [x] 1.2 Test suite green (smoke): `composer run test`
+- [x] 1.3 Assets build: `npm run build` exits 0
+- [x] 1.4 Formatting clean: `vendor/bin/pint --test`
 
 #### Manual
 
-- [ ] 1.5 Seed a user via `php artisan tinker`, log in via browser, land on `/dashboard`
-- [ ] 1.6 Sign out → public page; revisit `/dashboard` → redirect to `/login`
-- [ ] 1.7 Repeated bad logins trip the throttle (lockout message)
+- [x] 1.5 Seed a user via `php artisan tinker`, log in via browser, land on `/dashboard`
+- [x] 1.6 Sign out → public page; revisit `/dashboard` → redirect to `/login`
+- [x] 1.7 Repeated bad logins trip the throttle (lockout message)
 
 ### Phase 2: Registration (email+password, derived name)
 
