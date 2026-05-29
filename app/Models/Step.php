@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['body', 'source', 'position'])]
+#[Fillable(['body', 'position'])]
 class Step extends Model
 {
     use HasFactory;

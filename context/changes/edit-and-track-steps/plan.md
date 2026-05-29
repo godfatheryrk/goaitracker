@@ -445,15 +445,15 @@ The nine tests above. Total breakdown: AddStepTest (2), EditStepTest (3), Delete
 
 #### Automated
 
-- [ ] 1.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 1.2 Existing test suite still green: `composer run test` (especially `CreateVentureTest`)
-- [ ] 1.3 `php artisan route:list` shows the six new `steps.*` routes under the `auth` middleware
+- [x] 1.1 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 1.2 Existing test suite still green: `composer run test` (especially `CreateVentureTest`)
+- [x] 1.3 `php artisan route:list` shows the six new `steps.*` routes under the `auth` middleware
 
 #### Manual
 
-- [ ] 1.4 Visiting `/ventures/{v}/steps/create` while authenticated returns the placeholder 404 (skeleton stub fired)
-- [ ] 1.5 Visiting any of the six routes while unauthenticated redirects to `/login`
-- [ ] 1.6 `php artisan tinker` quick check: `\App\Models\Step::factory()->create()` still works
+- [x] 1.4 Visiting `/ventures/{v}/steps/create` while authenticated returns the placeholder 404 (skeleton stub fired)
+- [x] 1.5 Visiting any of the six routes while unauthenticated redirects to `/login`
+- [x] 1.6 `php artisan tinker` quick check: `\App\Models\Step::factory()->create()` still works
 
 ### Phase 2: Wire the five actions + rework the show view + ship the toggle JS island
 

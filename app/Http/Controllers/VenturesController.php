@@ -45,9 +45,11 @@ class VenturesController extends Controller
             foreach ($steps as $i => $body) {
                 $venture->steps()->make([
                     'body' => $body,
-                    'source' => StepSource::AiInitial,
                     'position' => $i,
-                ])->forceFill(['owner_id' => $user->id])->save();
+                ])->forceFill([
+                    'owner_id' => $user->id,
+                    'source' => StepSource::AiInitial,
+                ])->save();
             }
 
             return $venture;
