@@ -34,12 +34,20 @@
                     @if ($venture->steps->isEmpty())
                         <div class="mt-4 space-y-3">
                             <p class="text-sm text-gray-600">No steps yet.</p>
-                            <a href="{{ route('steps.create', $venture) }}"
-                               class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent
-                                      rounded-md font-semibold text-xs text-white uppercase tracking-widest
-                                      hover:bg-gray-700">
-                                + Add your first step
-                            </a>
+                            <div class="flex items-center gap-4">
+                                <a href="{{ route('steps.create', $venture) }}"
+                                   class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent
+                                          rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                                          hover:bg-gray-700">
+                                    + Add your first step
+                                </a>
+                                <form method="POST" action="{{ route('steps.suggestions.preview', $venture) }}" class="inline-block">
+                                    @csrf
+                                    <button type="submit" class="text-sm text-gray-700 hover:text-gray-900">
+                                        Suggest more with AI
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @else
                         <ol class="mt-3 space-y-2 list-decimal list-inside text-gray-800">
@@ -87,11 +95,17 @@
                             @endforeach
                         </ol>
 
-                        <div class="mt-4">
+                        <div class="mt-4 flex items-center gap-4">
                             <a href="{{ route('steps.create', $venture) }}"
                                class="text-sm text-gray-700 hover:text-gray-900">
                                 + Add step
                             </a>
+                            <form method="POST" action="{{ route('steps.suggestions.preview', $venture) }}" class="inline-block">
+                                @csrf
+                                <button type="submit" class="text-sm text-gray-700 hover:text-gray-900">
+                                    Suggest more with AI
+                                </button>
+                            </form>
                         </div>
                     @endif
                 </div>

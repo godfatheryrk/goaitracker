@@ -52,6 +52,13 @@ Route::middleware('auth')->group(function () {
         ->whereNumber('step')
         ->name('steps.completion');
 
+    Route::post('ventures/{venture}/steps/suggestions', [StepsController::class, 'suggest'])
+        ->whereNumber('venture')
+        ->name('steps.suggestions.preview');
+    Route::post('ventures/{venture}/steps/suggestions/confirm', [StepsController::class, 'storeSuggestions'])
+        ->whereNumber('venture')
+        ->name('steps.suggestions.store');
+
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
