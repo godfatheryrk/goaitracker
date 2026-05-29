@@ -327,9 +327,9 @@ Run `\App\Models\Step::where('venture_id', $v)->pluck('source', 'body')` after a
 
 #### Automated
 
-- [x] 2.1 All new feature tests pass: `composer run test`
-- [x] 2.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 2.3 `php artisan route:list` still shows the two `steps.suggestions.*` routes
+- [x] 2.1 All new feature tests pass: `composer run test` — a3a4340
+- [x] 2.2 Linting / formatting passes: `vendor/bin/pint --test` — a3a4340
+- [x] 2.3 `php artisan route:list` still shows the two `steps.suggestions.*` routes — a3a4340
 
 #### Manual
 

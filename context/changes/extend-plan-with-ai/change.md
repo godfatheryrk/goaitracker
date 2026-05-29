@@ -1,7 +1,7 @@
 ---
 change_id: extend-plan-with-ai
 title: Extend plan with ai
-status: implementing
+status: implemented
 created: 2026-05-29
 updated: 2026-05-29
 archived_at: null
