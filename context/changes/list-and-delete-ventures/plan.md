@@ -280,23 +280,23 @@ None. No schema change, no data migration. The `Step::$touches = ['venture']` ch
 
 #### Manual
 
-- [ ] 1.4 Logging in lands on the list at `/dashboard`; the URL `/ventures` also renders the list with the same content
-- [ ] 1.5 Empty state renders the "Create your first venture" CTA; clicking it navigates to `/ventures/create`
-- [ ] 1.6 Creating a new venture redirects to its detail view; navigating back via the nav home link lands on the list with the new venture at the top
-- [ ] 1.7 Editing a step on an existing venture and returning to the list shows that venture bubbled to the top (verifies the `Step::$touches` wiring)
-- [ ] 1.8 Clicking Delete on a row fires the native confirm; clicking OK removes the row from the list on reload; the venture's step rows are gone (open the venture's detail URL directly post-delete → 404)
+- [x] 1.4 Logging in lands on the list at `/dashboard`; the URL `/ventures` also renders the list with the same content
+- [x] 1.5 Empty state renders the "Create your first venture" CTA; clicking it navigates to `/ventures/create`
+- [x] 1.6 Creating a new venture redirects to its detail view; navigating back via the nav home link lands on the list with the new venture at the top
+- [x] 1.7 Editing a step on an existing venture and returning to the list shows that venture bubbled to the top (verifies the `Step::$touches` wiring)
+- [x] 1.8 Clicking Delete on a row fires the native confirm; clicking OK removes the row from the list on reload; the venture's step rows are gone (open the venture's detail URL directly post-delete → 404)
 
 ### Phase 2: Test matrix + cross-slice handoff
 
 #### Automated
 
-- [x] 2.1 Full test suite passes: `composer run test` → 0 failures, 0 errors; Ventures suite now totals 12 tests (was 7)
-- [x] 2.2 `composer run test -- --filter=ListVenturesTest` runs the 3 list tests and passes
-- [x] 2.3 `composer run test -- --filter=DeleteVentureTest` runs the 2 delete tests and passes
-- [x] 2.4 `vendor/bin/pint` reports no formatting drift on the new test files
+- [x] 2.1 Full test suite passes: `composer run test` → 0 failures, 0 errors; Ventures suite now totals 12 tests (was 7) — c98334a
+- [x] 2.2 `composer run test -- --filter=ListVenturesTest` runs the 3 list tests and passes — c98334a
+- [x] 2.3 `composer run test -- --filter=DeleteVentureTest` runs the 2 delete tests and passes — c98334a
+- [x] 2.4 `vendor/bin/pint` reports no formatting drift on the new test files — c98334a
 
 #### Manual
 
-- [ ] 2.5 `docs/reference/contract-surfaces.md` reads as a coherent narrative — F-01 → S-01 → S-04 dashboard-reassignment story is internally consistent; no contradictions remain
-- [ ] 2.6 `context/foundation/roadmap.md` "At a glance" S-04 row reads `done`; "Backlog Handoff" S-04 row reads `done`
-- [ ] 2.7 `context/changes/list-and-delete-ventures/change.md` frontmatter shows `status: implemented`
+- [x] 2.5 `docs/reference/contract-surfaces.md` reads as a coherent narrative — F-01 → S-01 → S-04 dashboard-reassignment story is internally consistent; no contradictions remain
+- [x] 2.6 `context/foundation/roadmap.md` "At a glance" S-04 row reads `done`; "Backlog Handoff" S-04 row reads `done`
+- [x] 2.7 `context/changes/list-and-delete-ventures/change.md` frontmatter shows `status: implemented`
