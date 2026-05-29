@@ -151,6 +151,73 @@ S-01 deliberately does not pre-build any of those surfaces; downstream slices ad
 
 ---
 
+## Step surface (S-02)
+
+**Established by**: S-02 (`context/changes/edit-and-track-steps/`).
+
+**PRD anchors**: FR-010 (manual add), FR-011 (edit body), FR-012 (delete with confirmation), FR-013 (toggle completion directly on the list — no confirmation), FR-018 (proportion of completed vs total), NFR(edit-latency).
+
+### Routes (all under the `auth` middleware, nested under `ventures/{venture}`)
+
+- `steps.create` (GET `/ventures/{venture}/steps/create`, `whereNumber('venture')`) — render the add-step form bound to the venture.
+- `steps.store` (POST `/ventures/{venture}/steps`, `whereNumber('venture')`) — validate `CreateStepRequest`, persist one `manual` step appended to the list (`max(position) + 1`), redirect to `ventures.show`.
+- `steps.edit` (GET `/ventures/{venture}/steps/{step}/edit`, both params `whereNumber`) — render the edit form pre-populated with the step's current body.
+- `steps.update` (PATCH `/ventures/{venture}/steps/{step}`, both params `whereNumber`) — validate `EditStepRequest`, write `body` only, redirect to `ventures.show`.
+- `steps.destroy` (DELETE `/ventures/{venture}/steps/{step}`, both params `whereNumber`) — delete the step row, redirect to `ventures.show`. Confirmation is the frontend's job (native `confirm()` in `ventures.show`).
+- `steps.completion` (PATCH `/ventures/{venture}/steps/{step}/completion`, both params `whereNumber`) — flip `is_completed`. Two response shapes (see _Toggle endpoint response contract_ below).
+
+### Access path rule (realization of the F-01 contract on a nested resource)
+
+Every authenticated action on the step surface MUST resolve both the venture and the step through the doubly-scoped relationship chain:
+
+```php
+$ventureModel = $request->user()->ventures()->findOrFail($venture);
+$stepModel = $ventureModel->steps()->findOrFail($step);
+```
+
+This produces **404 (not 403)** for either a foreign venture OR a foreign step under an owned venture — the relationship-scoped query simply finds no row, so the user cannot distinguish "exists but forbidden" from "does not exist." No global `findOrFail(Step::class)`, no `Route::bind('step', …)`, no global scope on the `Step` model. The same rule applies to S-03 / S-05 when they extend this surface (e.g. S-03's AI-extension trigger nests on the same `ventures/{venture}` parent).
+
+### Source-immutability invariant (FR-008 metric depends on this)
+
+The `steps.source` column carries the frozen FR-008 primary-metric AI-pool snapshot at venture creation. Any code path that lets an edit overwrite `source` corrupts the metric for every venture from that point forward. Defense in depth is the discipline:
+
+- **Layer 1 — `Step::$fillable = ['body', 'position']`.** `source` is NOT mass-assignable. `->update($input)` or `->fill($input)` cannot rewrite it. `is_completed` is also absent from `$fillable` (toggle is the only writer; see below).
+- **Layer 2 — `EditStepRequest` whitelists `body` only.** Even if a malicious client sends `source: manual` in the request body, the `validated()` array passed to `->update()` contains only `body`. The two layers stack: removing either still leaves the other as a backstop.
+
+Writes that genuinely need to set `source` (the AI-initial seed loop in `VenturesController::store`, the manual-add path in `StepsController::store`) use `->forceFill(['source' => StepSource::AiInitial])` or `['source' => StepSource::Manual]` — forcing the assignment is explicit and audited, not accidental.
+
+### Toggle endpoint response contract
+
+`StepsController::toggleCompletion` returns two response shapes depending on `Accept`:
+
+- `Accept: application/json` → **200 JSON** `{is_completed: bool, completed: int, total: int}`. The JS island consumes this to update the checkbox state, the body's `line-through` styling, and the progress text — all without a page reload (NFR(edit-latency) "≤1s perceived feedback" for FR-013).
+- Otherwise → **302 redirect** to `ventures.show`. This is the `<noscript>` Save-button fallback path — when JS is off, the form submits normally and the redirect lands the user back on the detail view with completion persisted.
+
+`is_completed` is NOT in `Step::$fillable`. The toggle action MUST set the attribute directly (`$step->is_completed = ! $step->is_completed; $step->save();`) — `->update(['is_completed' => ...])` would silently no-op. Any future code path writing this field MUST follow the same pattern.
+
+### Length cap
+
+`CreateStepRequest` and `EditStepRequest` enforce `body: ['required', 'string', 'min:1', 'max:200']`. The 200 matches both the `steps.body` column width (`string('body', 200)`) and F-02's `config('ai.step_suggestion.max_step_length')` — per the [AI suggestion surface](#ai-suggestion-surface-f-02) "Length cap coupling" note, all three move in lockstep.
+
+### Test proof
+
+- `tests/Feature/Steps/AddStepTest.php` — 2 tests covering FR-010 happy path (`manual` source, position appended at end, owner = current user) and the two-user-404 isolation boundary.
+- `tests/Feature/Steps/EditStepTest.php` — 3 tests covering FR-011 happy path, the source-immutability invariant (`source: manual` in the request body is rejected by the FormRequest whitelist; `source` remains `ai_initial`), and the two-user-404 isolation boundary.
+- `tests/Feature/Steps/DeleteStepTest.php` — 2 tests covering FR-012 happy path (row removed, redirect to show) and the two-user-404 isolation boundary. The "with confirmation" requirement is a frontend concern (native `confirm()`); the backend just deletes.
+- `tests/Feature/Steps/ToggleStepTest.php` — 2 tests covering FR-013 happy path on the JSON response shape (`patchJson` → `{is_completed: true, completed: 1, total: 1}`) and the two-user-404 isolation boundary on the same endpoint.
+- `tests/Feature/Ventures/ShowVentureProgressTest.php` — 1 test covering FR-018 ("X of Y completed" text) for the mixed-completion case (2/4). The 0/0 and N/N variants share the same render path and don't need separate proof for v1.
+
+### Out of scope for S-02 (deferred to downstream slices)
+
+- AI-extension trigger (FR-009) → **S-03** (adds `StepSource::AiExtension` writes to this surface).
+- Step deadlines + 3-day badge (FR-014, FR-020) → **S-05** (adds a `deadline` column and badge UI).
+- Venture list / venture delete UI (FR-005, FR-007) → **S-04**.
+- Expenses (FR-015–FR-017) → **S-06**.
+- Reorder action (drag-and-drop, position rewrite) — not in PRD scope; append-only adds with stable position remain the v1 model.
+- Undo for delete — PRD §Guardrails accepts the confirm dialog as the second-gesture requirement; undo is a v2 enhancement.
+
+---
+
 ## Future evolution
 
 > Both expansions below are PRD-contemplated in the Non-Goals _"forward-compatibility note: if added in v2+, the per-user-isolation NFR must continue to hold"_ but are NOT in the v1 roadmap. These notes exist so the F-01 contract does not foreclose either path — and so S-01 does not pick a structure (e.g. a `unique` constraint that assumes one venture per user) that would block them.

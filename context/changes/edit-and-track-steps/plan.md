@@ -459,29 +459,29 @@ The nine tests above. Total breakdown: AddStepTest (2), EditStepTest (3), Delete
 
 #### Automated
 
-- [x] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 2.2 Existing test suite still green: `composer run test`
-- [x] 2.3 `npm run build` completes without errors
-- [x] 2.4 `php artisan route:list` still shows the six `steps.*` routes
+- [x] 2.1 Linting / formatting passes: `vendor/bin/pint --test` — 275d23a
+- [x] 2.2 Existing test suite still green: `composer run test` — 275d23a
+- [x] 2.3 `npm run build` completes without errors — 275d23a
+- [x] 2.4 `php artisan route:list` still shows the six `steps.*` routes — 275d23a
 
 #### Manual
 
-- [x] 2.5 Toggle a step's checkbox → flips with no reload, body gets line-through, progress text updates
-- [x] 2.6 Edit a step → body updates, `source` preserved (verified by tinker)
-- [x] 2.7 Delete a step → native confirm dialog → step removed, total drops by 1
-- [x] 2.8 Add a manual step → lands at end of list with `source = Manual`
-- [x] 2.9 Empty-state venture: "+ Add your first step" CTA renders and works
-- [x] 2.10 JS-disabled browser: toggle checkbox + click Save → page reloads → completion persists
+- [x] 2.5 Toggle a step's checkbox → flips with no reload, body gets line-through, progress text updates — 275d23a
+- [x] 2.6 Edit a step → body updates, `source` preserved (verified by tinker) — 275d23a
+- [x] 2.7 Delete a step → native confirm dialog → step removed, total drops by 1 — 275d23a
+- [x] 2.8 Add a manual step → lands at end of list with `source = Manual` — 275d23a
+- [x] 2.9 Empty-state venture: "+ Add your first step" CTA renders and works — 275d23a
+- [x] 2.10 JS-disabled browser: toggle checkbox + click Save → page reloads → completion persists — 275d23a
 
 ### Phase 3: Essentials test matrix + cross-slice handoff
 
 #### Automated
 
-- [ ] 3.1 All new feature tests pass: `composer run test`
-- [ ] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 3.3 `php artisan route:list` still shows the six `steps.*` routes
+- [x] 3.1 All new feature tests pass: `composer run test`
+- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 3.3 `php artisan route:list` still shows the six `steps.*` routes
 
 #### Manual
 
-- [ ] 3.4 `docs/reference/contract-surfaces.md` "Step surface (S-02)" reads sensibly with working file:line references and the source-immutability invariant unambiguous
-- [ ] 3.5 `context/foundation/roadmap.md` S-02 row is `done` in the table, the slice block, and the Backlog Handoff column
+- [x] 3.4 `docs/reference/contract-surfaces.md` "Step surface (S-02)" reads sensibly with working file:line references and the source-immutability invariant unambiguous
+- [x] 3.5 `context/foundation/roadmap.md` S-02 row is `done` in the table, the slice block, and the Backlog Handoff column
