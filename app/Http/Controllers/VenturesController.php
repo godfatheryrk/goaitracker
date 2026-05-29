@@ -21,6 +21,7 @@ class VenturesController extends Controller
                 'steps',
                 'steps as completed_steps_count' => fn ($q) => $q->where('is_completed', true),
             ])
+            ->withSum('expenses as total_cost', 'amount')
             ->orderByDesc('updated_at')
             ->get();
 
@@ -77,14 +78,16 @@ class VenturesController extends Controller
 
     public function show(Request $request, int $venture): View
     {
-        $model = $request->user()->ventures()->with('steps')->findOrFail($venture);
+        $model = $request->user()->ventures()->with(['steps', 'expenses'])->findOrFail($venture);
         $completed = $model->steps->where('is_completed', true)->count();
         $total = $model->steps->count();
+        $totalCost = $model->expenses()->sum('amount');
 
         return view('ventures.show', [
             'venture' => $model,
             'completed' => $completed,
             'total' => $total,
+            'totalCost' => $totalCost,
         ]);
     }
 

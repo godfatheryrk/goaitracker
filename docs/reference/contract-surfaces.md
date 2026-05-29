@@ -307,7 +307,7 @@ The guest-302-on-destroy assertion the F-01 enforcement checklist names is NOT s
 
 ### Out of scope for S-04 (deferred / explicitly not done)
 
-- Total-cost cell on the list row → **S-06** (FR-019 surfaces cost on both detail and list; the list layout deliberately leaves room without pre-building a slot).
+- Total-cost cell on the list row → satisfied by S-06 — see [Expense surface (S-06)](#expense-surface-s-06).
 - Imminent / overdue deadline marker on the list row → **S-05** (FR-021).
 - Description excerpt on the list row → not planned for v1; description is optional and most v1 rows would render an empty block. Detail view (S-01) is the description surface.
 - Pagination / sort / filter / active-vs-completed splits → v2; FR-005 Socrates resolution locks v1 to a flat list.
@@ -316,6 +316,78 @@ The guest-302-on-destroy assertion the F-01 enforcement checklist names is NOT s
 - Undo for delete → v2 (PRD §Guardrails accepts the native-confirm gesture as the second-gesture requirement).
 - Heavier delete-confirmation guard (typed-title modal) → v2 ergonomic enhancement.
 - JS island for any list-row interaction → not needed; the list is read-only + form-POST delete with a native confirm.
+
+---
+
+## Expense surface (S-06)
+
+**Established by**: S-06 (`context/changes/venture-expenses-and-cost/`).
+
+**PRD anchors**: FR-015 (add expense: amount + description + date), FR-016 (delete expense), FR-017 (edit expense), FR-019 (accumulated total cost on BOTH the detail view AND the venture list), NFR(isolation), NFR(edit-latency).
+
+### Routes (all under the `auth` middleware, nested under `ventures/{venture}/expenses/...`)
+
+- `expenses.create` (GET `/ventures/{venture}/expenses/create`, `whereNumber('venture')`) — render the add-expense form bound to the venture.
+- `expenses.store` (POST `/ventures/{venture}/expenses`, `whereNumber('venture')`) — validate `CreateExpenseRequest`, persist one expense, redirect to `ventures.show`.
+- `expenses.edit` (GET `/ventures/{venture}/expenses/{expense}/edit`, both params `whereNumber`) — render the edit form pre-populated with the expense's current values.
+- `expenses.update` (PATCH `/ventures/{venture}/expenses/{expense}`, both params `whereNumber`) — validate `EditExpenseRequest`, write `amount` / `description` / `date` only, redirect to `ventures.show`.
+- `expenses.destroy` (DELETE `/ventures/{venture}/expenses/{expense}`, both params `whereNumber`) — delete the row, redirect to `ventures.show`. Confirmation is the frontend's job (native `confirm('Delete this expense?')` in `ventures.show`).
+
+### Access path rule (realization of the F-01 / S-02 contract on a nested resource)
+
+Every authenticated action resolves both the venture and the expense through the doubly-scoped relationship chain:
+
+```php
+$ventureModel = $request->user()->ventures()->findOrFail($venture);
+$expenseModel = $ventureModel->expenses()->findOrFail($expense);
+```
+
+This produces **404 (not 403)** for either a foreign venture OR a foreign expense under an owned venture — the relationship-scoped query simply finds no row, so the user cannot distinguish "exists but forbidden" from "does not exist." No global `Expense::find(...)`, no `Route::bind('expense', …)`, no global scope on the `Expense` model.
+
+### Money precision discipline (the load-bearing decision of this slice)
+
+`amount` is `decimal(12,2)` with the Eloquent `decimal:2` cast, so reads return a stringified decimal (`"12.50"`) that never coerces to float. **Two float-coercion traps are avoided:**
+
+- **List-row total** via `withSum('expenses as total_cost', 'amount')` on the `VenturesController::index` aggregate chain — PG / SQLite compute the SUM in exact decimal arithmetic as one subquery (no N+1). The alias `total_cost` is NOT auto-cast (it's a raw query alias), is NULL when the venture has no expenses, and is rendered via `number_format($venture->total_cost ?? 0, 2)` so the empty case shows `Total: 0.00` and the line layout stays stable for S-05's next-line slot.
+- **Detail-view total** via `$venture->expenses()->sum('amount')` (DB-side `SELECT SUM(amount)`), **NOT** `$venture->expenses->sum('amount')` (PHP `array_sum`, which float-coerces). The detail action issues one extra DB query against the `(venture_id, date)` index; sub-millisecond, trivially under NFR(edit-latency).
+
+### `Expense::$touches = ['venture']` coupling
+
+Bubbles expense writes into the parent venture's `updated_at` so the venture-list `ORDER BY updated_at DESC` sort honors recent expense activity — the same lesson S-04 codified for `Step`. Any future code path writing an `Expense` outside `save()` / `delete()` (e.g. raw `DB::table('expenses')->...`) MUST call `$venture->touch()` explicitly, or the sort lies silently.
+
+### Owner-immutability (defense in depth)
+
+`Expense::$fillable = ['amount', 'description', 'date']` — `owner_id` and `venture_id` are deliberately absent. The store action sets `owner_id` via `->forceFill(['owner_id' => …])` and `venture_id` via the relationship's `make()`. Combined with the `CreateExpenseRequest` / `EditExpenseRequest` body-only whitelist, a tampered payload carrying `owner_id: 99999` or `venture_id: 99999` is a no-op at the model layer. Same shape S-02 uses for `Step::source`.
+
+### Shared-surface contracts S-05 inherits
+
+S-06 runs in parallel with S-05 on the same return-surface page and list; these three contracts are codified so S-05 lands without a silent rebase:
+
+1. **Venture-list per-row metadata is a stack of `<p>` lines** under the title link. Line 1 = `"X of Y steps completed"` (or `"—"` when no steps — owned by S-04). Line 2 = `"Total: X.XX"` (always rendered, `0.00` when empty — owned by S-06). **Line 3 = the deadline marker — reserved for S-05 to fill.** S-05 SHOULD insert its `<p>` immediately after S-06's total line, never above. A Blade comment in `ventures/index.blade.php` flags the slot explicitly.
+2. **Venture-detail outer stack ordering** (the `<div class="...space-y-6">` in `ventures/show.blade.php`): AI-unavailable flash → Description → Steps → **Expenses** (S-06, appended below Steps). S-05 modifies only the Steps card's inner `<li>` rows (a deadline badge per step); the outer stack ordering is OWNED by S-06. S-05 MUST NOT insert a new card above Steps or below Expenses without a plan-revision conversation.
+3. **`VenturesController::index` aggregate chain ordering**: `->withCount([...])->withSum('expenses as total_cost', 'amount')->orderByDesc('updated_at')->get()`. S-05 SHOULD add its deadline-pressure aggregate into the same `withCount([...])` array as another named subquery, preserving the existing `withSum` and `orderByDesc` lines. The `total_cost` alias must not collide with any S-05 alias.
+
+### Test proof
+
+- `tests/Feature/Expenses/AddExpenseTest.php` — 2 tests: FR-015 happy path (`owner_id` / `venture_id` / cast values persisted) and the two-user-404 isolation boundary (`Expense::count()` stays 0).
+- `tests/Feature/Expenses/EditExpenseTest.php` — 2 tests: FR-017 happy path (three fields update, `owner_id` / `venture_id` unchanged) and the two-user-404 boundary on the nested `{venture}/{expense}` resource (A's expense unchanged).
+- `tests/Feature/Expenses/DeleteExpenseTest.php` — 2 tests: FR-016 happy path (row removed, redirect to show) and the two-user-404 boundary (A's expense survives).
+- `tests/Feature/Ventures/VentureTotalCostTest.php` — 1 test: FR-019 cross-surface render (`Total: 24.75` on BOTH `ventures.show` and `ventures.index` from the same DB SUM).
+
+Guest-302 is deferred — the `auth` middleware boundary is structurally identical to the one already proven by `tests/Feature/Ventures/VentureIsolationTest::test_guest_gets_redirect_on_venture_show`. Same justification S-04 used.
+
+### Out of scope for S-06 (deferred / explicitly not done)
+
+- Multi-currency / currency symbol / locale formatting → PRD §Non-Goals (single currency v1).
+- Per-step expense allocation (`step_id` on `Expense`) → PRD §Non-Goals (venture-level only v1).
+- Expense categories → v2 (FR-015 Socrates resolution).
+- Budget comparison / expense-vs-budget view → v2.
+- File-format export / report → PRD §Non-Goals.
+- Undo for delete → v2 (native confirm is the v1 second-gesture).
+- Deadline marker on the list row → **S-05** owns line 3 of the metadata stack.
+- Cross-venture total-cost roll-up → PRD §Non-Goals (no cross-venture dashboard v1).
+- JS island → none; five form POSTs + full-reload redirects.
+- Policy classes / authorization layer → v3+ per [v3+: co-editing](#v3-co-editing-multi-user-write-access).
 
 ---
 

@@ -45,7 +45,7 @@ entire product thesis fails; everything else only matters once this works.
 | S-03  | extend-plan-with-ai                | trigger AI to append more steps (append-only, off-metric)               | S-01, F-02    | FR-009                                                | done     |
 | S-04  | list-and-delete-ventures           | view a list of own ventures, open or delete one                         | S-01          | FR-005, FR-006, FR-007                                | done     |
 | S-05  | step-deadlines-and-pressure-signals | set optional step deadlines; see imminent/overdue badges + list marker  | S-02, S-04    | FR-014, FR-020, FR-021                                | proposed |
-| S-06  | venture-expenses-and-cost          | add / edit / delete expenses; see total cost on detail + list           | S-01, S-04    | FR-015, FR-016, FR-017, FR-019                        | proposed |
+| S-06  | venture-expenses-and-cost          | add / edit / delete expenses; see total cost on detail + list           | S-01, S-04    | FR-015, FR-016, FR-017, FR-019                        | done |
 
 ## Streams
 
@@ -170,7 +170,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** FR-019 requires total cost on two surfaces, so this slice touches both detail and list (hence the S-04 prerequisite). Lower product-thesis priority than the AI loop, so sequenced after the core wedge under the `speed` goal. Edit/delete carry the destructive-action confirm guardrail.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -183,7 +183,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-03       | extend-plan-with-ai                | Extend step plan via AI (append-only)                    | done                  | Needs S-01, F-02                       |
 | S-04       | list-and-delete-ventures           | Venture list + delete venture                            | done                  | Needs S-01                             |
 | S-05       | step-deadlines-and-pressure-signals | Step deadlines + imminent/overdue badges & list marker   | no                    | Needs S-02, S-04                       |
-| S-06       | venture-expenses-and-cost          | Venture expenses + total cost on detail & list           | no                    | Needs S-01, S-04                       |
+| S-06       | venture-expenses-and-cost          | Venture expenses + total cost on detail & list           | done                  | Needs S-01, S-04                       |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One row per `F-NN` / `S-NN`.
 

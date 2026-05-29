@@ -47,6 +47,14 @@
                                                 {{ $venture->completed_steps_count }} of {{ $venture->steps_count }} steps completed
                                             @endif
                                         </p>
+                                        {{-- Per-row metadata slot contract (set by S-06):
+                                             line 1 = step progress (S-04)
+                                             line 2 = total cost (S-06)
+                                             line 3 = deadline marker (reserved for S-05)
+                                             S-05 should append its `<p>` immediately after this line, not above. --}}
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            Total: {{ number_format($venture->total_cost ?? 0, 2) }}
+                                        </p>
                                     </div>
                                     <form method="POST"
                                           action="{{ route('ventures.destroy', $venture) }}"
