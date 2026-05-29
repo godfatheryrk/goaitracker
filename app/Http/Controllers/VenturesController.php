@@ -65,7 +65,13 @@ class VenturesController extends Controller
     public function show(Request $request, int $venture): View
     {
         $model = $request->user()->ventures()->with('steps')->findOrFail($venture);
+        $completed = $model->steps->where('is_completed', true)->count();
+        $total = $model->steps->count();
 
-        return view('ventures.show', ['venture' => $model]);
+        return view('ventures.show', [
+            'venture' => $model,
+            'completed' => $completed,
+            'total' => $total,
+        ]);
     }
 }

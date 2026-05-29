@@ -445,33 +445,33 @@ The nine tests above. Total breakdown: AddStepTest (2), EditStepTest (3), Delete
 
 #### Automated
 
-- [x] 1.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 1.2 Existing test suite still green: `composer run test` (especially `CreateVentureTest`)
-- [x] 1.3 `php artisan route:list` shows the six new `steps.*` routes under the `auth` middleware
+- [x] 1.1 Linting / formatting passes: `vendor/bin/pint --test` — 0700dc0
+- [x] 1.2 Existing test suite still green: `composer run test` (especially `CreateVentureTest`) — 0700dc0
+- [x] 1.3 `php artisan route:list` shows the six new `steps.*` routes under the `auth` middleware — 0700dc0
 
 #### Manual
 
-- [x] 1.4 Visiting `/ventures/{v}/steps/create` while authenticated returns the placeholder 404 (skeleton stub fired)
-- [x] 1.5 Visiting any of the six routes while unauthenticated redirects to `/login`
-- [x] 1.6 `php artisan tinker` quick check: `\App\Models\Step::factory()->create()` still works
+- [x] 1.4 Visiting `/ventures/{v}/steps/create` while authenticated returns the placeholder 404 (skeleton stub fired) — 0700dc0
+- [x] 1.5 Visiting any of the six routes while unauthenticated redirects to `/login` — 0700dc0
+- [x] 1.6 `php artisan tinker` quick check: `\App\Models\Step::factory()->create()` still works — 0700dc0
 
 ### Phase 2: Wire the five actions + rework the show view + ship the toggle JS island
 
 #### Automated
 
-- [ ] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 2.2 Existing test suite still green: `composer run test`
-- [ ] 2.3 `npm run build` completes without errors
-- [ ] 2.4 `php artisan route:list` still shows the six `steps.*` routes
+- [x] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 2.2 Existing test suite still green: `composer run test`
+- [x] 2.3 `npm run build` completes without errors
+- [x] 2.4 `php artisan route:list` still shows the six `steps.*` routes
 
 #### Manual
 
-- [ ] 2.5 Toggle a step's checkbox → flips with no reload, body gets line-through, progress text updates
-- [ ] 2.6 Edit a step → body updates, `source` preserved (verified by tinker)
-- [ ] 2.7 Delete a step → native confirm dialog → step removed, total drops by 1
-- [ ] 2.8 Add a manual step → lands at end of list with `source = Manual`
-- [ ] 2.9 Empty-state venture: "+ Add your first step" CTA renders and works
-- [ ] 2.10 JS-disabled browser: toggle checkbox + click Save → page reloads → completion persists
+- [x] 2.5 Toggle a step's checkbox → flips with no reload, body gets line-through, progress text updates
+- [x] 2.6 Edit a step → body updates, `source` preserved (verified by tinker)
+- [x] 2.7 Delete a step → native confirm dialog → step removed, total drops by 1
+- [x] 2.8 Add a manual step → lands at end of list with `source = Manual`
+- [x] 2.9 Empty-state venture: "+ Add your first step" CTA renders and works
+- [x] 2.10 JS-disabled browser: toggle checkbox + click Save → page reloads → completion persists
 
 ### Phase 3: Essentials test matrix + cross-slice handoff
 
