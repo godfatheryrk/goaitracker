@@ -18,6 +18,8 @@ class Step extends Model
         'source' => StepSource::class,
     ];
 
+    protected $touches = ['venture'];
+
     public function venture(): BelongsTo
     {
         return $this->belongsTo(Venture::class);

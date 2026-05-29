@@ -1,7 +1,7 @@
 ---
 change_id: list-and-delete-ventures
 title: List and delete ventures
-status: plan_reviewed
+status: implementing
 created: 2026-05-29
 updated: 2026-05-29
 archived_at: null

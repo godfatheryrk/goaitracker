@@ -274,9 +274,9 @@ None. No schema change, no data migration. The `Step::$touches = ['venture']` ch
 
 #### Automated
 
-- [ ] 1.1 Existing test suite stays green: `composer run test` exits 0 with the prior 7 Ventures + 17 Steps tests still passing
-- [ ] 1.2 `php artisan route:list --name=ventures` shows `ventures.index`, `ventures.show`, `ventures.store`, `ventures.create`, `ventures.destroy` (and the `dashboard` row now points at `App\Http\Controllers\VenturesController@index`)
-- [ ] 1.3 `vendor/bin/pint` reports no formatting drift
+- [x] 1.1 Existing test suite stays green: `composer run test` exits 0 with the prior 7 Ventures + 17 Steps tests still passing
+- [x] 1.2 `php artisan route:list --name=ventures` shows `ventures.index`, `ventures.show`, `ventures.store`, `ventures.create`, `ventures.destroy` (and the `dashboard` row now points at `App\Http\Controllers\VenturesController@index`)
+- [x] 1.3 `vendor/bin/pint` reports no formatting drift
 
 #### Manual
 

@@ -21,13 +21,17 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('dashboard', [VenturesController::class, 'create'])->name('dashboard');
+    Route::get('dashboard', [VenturesController::class, 'index'])->name('dashboard');
 
     Route::get('ventures/create', [VenturesController::class, 'create'])->name('ventures.create');
+    Route::get('ventures', [VenturesController::class, 'index'])->name('ventures.index');
     Route::post('ventures', [VenturesController::class, 'store'])->name('ventures.store');
     Route::get('ventures/{venture}', [VenturesController::class, 'show'])
         ->whereNumber('venture')
         ->name('ventures.show');
+    Route::delete('ventures/{venture}', [VenturesController::class, 'destroy'])
+        ->whereNumber('venture')
+        ->name('ventures.destroy');
 
     Route::get('ventures/{venture}/steps/create', [StepsController::class, 'create'])
         ->whereNumber('venture')
