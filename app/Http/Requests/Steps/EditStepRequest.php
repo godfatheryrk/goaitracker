@@ -12,9 +12,10 @@ class EditStepRequest extends FormRequest
     }
 
     /**
-     * Body-only whitelist — the FormRequest layer of source-immutability
-     * defense (Step::$fillable is the other layer). Any future audit-only
-     * field belongs here, not on CreateStepRequest.
+     * Whitelist — the FormRequest layer of source-immutability defense
+     * (Step::$fillable is the other layer). 'body' and the optional 'deadline'
+     * are the only assignable fields; 'source'/'is_completed' are deliberately
+     * absent. An empty 'deadline' submit clears the deadline (nullable).
      *
      * @return array<string, array<int, string>>
      */
@@ -22,6 +23,7 @@ class EditStepRequest extends FormRequest
     {
         return [
             'body' => ['required', 'string', 'min:1', 'max:200'],
+            'deadline' => ['nullable', 'date'],
         ];
     }
 }

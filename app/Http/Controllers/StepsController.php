@@ -33,6 +33,7 @@ class StepsController extends Controller
         $ventureModel->steps()->make([
             'body' => $request->validated('body'),
             'position' => $nextPosition,
+            'deadline' => $request->validated('deadline'),
         ])->forceFill([
             'owner_id' => $request->user()->id,
             'source' => StepSource::Manual,

@@ -18,6 +18,7 @@ class CreateStepRequest extends FormRequest
     {
         return [
             'body' => ['required', 'string', 'min:1', 'max:200'],
+            'deadline' => ['nullable', 'date'],
         ];
     }
 }

@@ -319,6 +319,66 @@ The guest-302-on-destroy assertion the F-01 enforcement checklist names is NOT s
 
 ---
 
+## Step deadline surface (S-05)
+
+**Established by**: S-05 (`context/changes/step-deadlines-and-pressure-signals/`).
+
+**PRD anchors**: FR-014 (optional per-step deadline), FR-020 (detail-view per-step badge, persists until step complete), FR-021 (binary deadline-pressure marker on the venture list), US-01.
+
+### Schema
+
+`steps.deadline` is a **nullable `date`** column (`database/migrations/2026_05_29_120000_add_deadline_to_steps_table.php`) added `after('is_completed')`. NULL = "no deadline," which is the first-class FR-014 default — existing rows migrate to NULL. Date-only (not datetime): intra-day timing is a v2 deferral (FR-014 Socrates resolution). The migration is additive and reversible (`down()` drops the column).
+
+### Single source for the 3-day window (load-bearing)
+
+`Step::IMMINENT_WINDOW_DAYS = 3` is the **one** definition of the imminent window. It is referenced by BOTH:
+
+1. The FR-021 list-pressure query closure in `VenturesController::index` (`whereDate('deadline', '<=', today()->addDays(Step::IMMINENT_WINDOW_DAYS))`).
+2. The FR-020 detail-view classification in `Step::deadlinePressure()` (`deadline <= today()->addDays(self::IMMINENT_WINDOW_DAYS)`).
+
+**If these two ever read different window values, the list marker and the detail badge disagree about the same step.** Any change to the window MUST move the constant, never a literal at a call site.
+
+### Fillable / whitelist (source-immutability discipline preserved)
+
+`deadline` is added to `Step::$fillable` (`['body', 'position', 'deadline']`) and to BOTH `CreateStepRequest` and `EditStepRequest` rules as `['nullable', 'date']`. `source` / `is_completed` remain absent from both layers (the S-02 source-immutability invariant is untouched). On the edit path, an empty `deadline` submit clears the column to NULL (`nullable` + Laravel's empty-string-to-null) — clearing a deadline is first-class. `StepsController::store` carries `deadline` via the explicit `->make([...])` array (it does not pass the full `validated()`); `update()` flows it automatically through `->update($request->validated())`.
+
+### Detail-view pressure model (FR-020)
+
+`Step::deadlinePressure(): 'overdue'|'imminent'|null` is **completion-agnostic by design** — it never inspects `is_completed`. It returns `overdue` (`deadline < today()`), `imminent` (`deadline <= today() + window`), else `null` (future / no deadline). The detail view (`ventures/show.blade.php`) renders, only when `$step->deadline` is set, a `<span data-deadline-badge data-pressure-class="<amber|red emphasis>">`:
+
+- **`data-pressure-class`** is the *deadline-only* would-be emphasis (red `text-red-600 font-medium` / amber `text-amber-700 font-medium`, empty for non-pressured) — populated **regardless of completion state** so the live toggle can restore it on un-complete.
+- **Whether the emphasis is *applied* to the rendered `class`** is the separate render-time gate `! $step->is_completed`. A completed step renders the date muted (`text-xs text-gray-500`) with `data-pressure-class` still populated but NOT applied. This split (data attr = deadline-only; applied-or-not = completion gate) is what makes the live un-complete restore symmetric for every step, not just ones incomplete at page load.
+
+### List-pressure aggregate (FR-021)
+
+`VenturesController::index` appends `'steps as pressured_steps_count' => fn ($q) => $q->where('is_completed', false)->whereNotNull('deadline')->whereDate('deadline', '<=', today()->addDays(Step::IMMINENT_WINDOW_DAYS))` to the existing `withCount` array — one count subquery, no N+1. The list row renders a binary marker (`⚠ Deadline pressure`) iff `pressured_steps_count > 0`. Completed steps, no-deadline steps, and >window-out steps never contribute.
+
+### Live toggle (NFR(edit-latency) for FR-020)
+
+`resources/js/app.js`'s existing `data-toggle-completion` success handler now also locates the row's `[data-deadline-badge]` and toggles the classes listed in `data-pressure-class` (`classList.toggle(cls, ! data.is_completed)`) — removed on complete, restored on un-complete. The empty `data-pressure-class` (non-pressured deadline) is guarded (`.split(' ').filter(Boolean)`) so no stray class is added. No new fetch — it reuses the existing toggle JSON response.
+
+### Shared list-row contract (parallel S-06 seam — now merged)
+
+The authoritative row-layout contract lives in [Expense surface (S-06) → "Shared-surface contracts S-05 inherits"](#expense-surface-s-06). As merged, the `ventures/index.blade.php` left content `<div>` carries **stacked metadata `<p>` lines**: line 1 = step progress (S-04), line 2 = `Total: X.XX` cost (S-06), line 3 = the S-05 `⚠ Deadline pressure` marker (rendered only when `pressured_steps_count > 0`). S-05 renders line 3 immediately after S-06's total line; it does NOT introduce a right-side flex column or touch the delete form. In `index()`, S-05's `pressured_steps_count` (in the `withCount([...])` array) and S-06's `total_cost` (`->withSum('expenses as total_cost', 'amount')`) sit on the same query chain under distinct aliases — additive, no collision. The S-06 merge landed first; S-05's merge rebased these adjacent lines onto it. Likewise on `ventures/show.blade.php`, S-05 only edits the Steps card's inner `<li>` rows (the per-step deadline badge); the outer card stack (Description → Steps → Expenses) is owned by S-06 and left intact.
+
+### Test proof
+
+- `tests/Feature/Steps/StepDeadlineTest.php` — add persists deadline; add without deadline is first-class NULL; edit sets deadline; edit with empty value clears it; non-date 422s; two-user-404 on the update path (deadline unchanged).
+- `tests/Feature/Ventures/ListVenturesTest.php` — `pressured_steps_count` counts imminent+overdue incomplete steps; excludes completed / no-deadline / >window-out; list renders the marker iff pressured.
+- `tests/Feature/Ventures/ShowVentureDeadlineTest.php` — imminent → amber, overdue → red "Overdue", no-deadline → no badge, far-future → muted no-emphasis, completed-overdue → `data-pressure-class` kept but emphasis not applied.
+
+### Out of scope for S-05 (deferred / explicitly not done)
+
+- Intra-day / time-of-day deadlines → v2 (date-only v1).
+- Venture-level deadline → v2 (per-step only).
+- Configurable window / snooze → v2 (3-day fixed).
+- Richer list prioritization (count / severity / sort) → v2 (binary marker only).
+- External reminders (email / push) → v2 (in-app surfacing only, PRD Non-Goals).
+- Inline date editing on list/detail → deadlines are set via the existing create/edit step forms; no new routes, no new JS island for editing.
+- Total-cost cell on the list row → S-06 (FR-019); S-05 renders line 3 only.
+
+---
+
 ## Expense surface (S-06)
 
 **Established by**: S-06 (`context/changes/venture-expenses-and-cost/`).
