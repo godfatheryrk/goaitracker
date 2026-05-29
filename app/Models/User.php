@@ -40,4 +40,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Venture::class, 'owner_id');
     }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'owner_id');
+    }
 }

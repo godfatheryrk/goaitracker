@@ -604,16 +604,16 @@ Seven tests total. Breakdown: `AddExpenseTest` (2), `EditExpenseTest` (2), `Dele
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly: `php artisan migrate` (or `composer run test` via `RefreshDatabase`)
-- [ ] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 1.3 Existing test suite still green: `composer run test`
-- [ ] 1.4 `php artisan route:list --name=expenses` shows the five new `expenses.*` routes under the `auth` middleware
+- [x] 1.1 Migration applies cleanly: `php artisan migrate` (or `composer run test` via `RefreshDatabase`)
+- [x] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 1.3 Existing test suite still green: `composer run test` (57 passed)
+- [x] 1.4 `php artisan route:list --name=expenses` shows the five new `expenses.*` routes under the `auth` middleware
 
 #### Manual
 
-- [ ] 1.5 Visiting `/ventures/{v}/expenses/create` while authenticated returns the placeholder 404 (skeleton stub fires)
-- [ ] 1.6 Visiting any of the five routes while unauthenticated redirects to `/login`
-- [ ] 1.7 `php artisan tinker` quick check: `\App\Models\Expense::factory()->create()` succeeds with `amount` as stringified `decimal:2` and `date` as Carbon
+- [x] 1.5 Visiting `/ventures/{v}/expenses/create` while authenticated returns the placeholder 404 (skeleton stub fires)
+- [x] 1.6 Visiting any of the five routes while unauthenticated redirects to `/login`
+- [x] 1.7 `php artisan tinker` quick check: `\App\Models\Expense::factory()->create()` succeeds with `amount` as stringified `decimal:2` and `date` as Carbon
 
 ### Phase 2: Wire actions + integrate views
 

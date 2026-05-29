@@ -22,4 +22,9 @@ class Venture extends Model
     {
         return $this->hasMany(Step::class)->orderBy('position');
     }
+
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class)->orderByDesc('date')->orderByDesc('created_at');
+    }
 }
