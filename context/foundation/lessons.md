@@ -1,0 +1,28 @@
+# Lessons Learned
+
+> Append-only register of recurring rules and patterns. Re-read at start by /10x-frame, /10x-research, /10x-plan, /10x-plan-review, /10x-implement, /10x-impl-review.
+
+## Include roadmap slice ID in commit subject
+
+- **Context**: Committing phase of a plan implementation.
+- **Problem**: Without the roadmap slice ID, commit subjects only reference the change-id, leaving no shortcut back to the roadmap feature/slice the commit advances.
+- **Rule**: In commit subjects, include the roadmap feature/slice ID alongside the change-id — e.g. `feat(F-01/minimal-auth-and-isolation): ...` instead of `feat(minimal-auth-and-isolation): ...`.
+- **Applies to**: implement
+
+## Per-user isolation: relationship-only access in controllers
+
+- **Context**: Any slice adding a domain model that carries per-user data (ventures, steps, expenses, deadlines, anything user-owned).
+- **Problem**: A raw global query on a per-user model — `Venture::find($id)`, `Venture::where(...)`, route-model binding via `findOrFail` on a bare model — is a privacy bug. Even when followed by `->where('owner_id', $request->user()->id)` it leaks existence (404 vs 403) and gives a future refactor a path to drop the scoping clause without any compile or test signal. The PRD's NFR(isolation) is load-bearing: a leak here is a privacy incident regardless of feature correctness.
+- **Rule**: In authenticated controllers, reach per-user domain data ONLY through a relationship method on the authenticated user (today: `$request->user()->ventures()`, `$request->user()->expenses()->find($id)`). The rule is **structural** ("via a method on `$request->user()`") not **nominal** — the specific method name may evolve (e.g. `accessibleVentures()` if shared-write access is added in v3+, per `docs/reference/contract-surfaces.md#v3-co-editing-multi-user-write-access`), but going through the authenticated user is fixed. Route-model binding for owned resources MUST be ownership-scoped. Every per-user table carries an `owner_id` foreign key with cascade-on-delete — declared explicitly as `foreignId('owner_id')->constrained('users')->cascadeOnDelete()` because Laravel's column→table inference would otherwise look up `owners`. `owner_id` deliberately differs from `user_id`: it means _"the user who created and unrestricted-owns this row"_, while `user_id` is reserved for membership-pivot semantics (_"any user with some level of access"_). The `auth` middleware is the authentication boundary — every gated route sits behind it; public-by-design routes (e.g. a future read-only share-link route) are a separate access category and do not consult `$request->user()`.
+- **Why**: Privacy-incident risk. The convention is also the simplest "lint" — code review and the agent both check "did you go through `$request->user()->...`?", a structural rule that survives refactors and survives the v2 / v3 sharing evolutions in unchanged form.
+- **How to apply**: (a) declare the FK as `foreignId('owner_id')->constrained('users')->cascadeOnDelete()`; (b) declare `User::hasMany(Venture::class, 'owner_id')` and the inverse `belongsTo(User::class, 'owner_id')` (explicit FK name because the column is `owner_id`, not the `user_id` Laravel assumes by default); (c) controllers reach the model through the user relationship, never via a bare global query; (d) write a two-user feature test asserting user B gets 404 (not 403) on user A's resource — see `docs/reference/contract-surfaces.md#s-01-enforcement-checklist` for the full checklist.
+- **Applies to**: plan, plan-review, implement, impl-review
+
+## AI integration: fail-open, increment-before-dispatch
+
+- **Context**: Any service that wraps a remote AI call on the web request thread (today: `App\Services\AiStepSuggester`; future: any slice that adds its own AI call).
+- **Problem**: A misconfigured API key or a flapping provider causes every call to fail. If the per-user counter only increments on success, a broken account can fire hundreds of requests per day and burn provider quota before anyone notices. Separately, if provider exceptions are allowed to propagate past the service boundary, a transient Groq hiccup silently breaks venture creation — violating NFR(ai-graceful).
+- **Rule**: (1) **Fail open at the service boundary** — the public `suggestSteps()` method MUST return `[]` on every failure mode and MUST NOT let any provider `\Throwable` cross the seam. (2) **Increment the counter BEFORE dispatching** — the upsert/increment happens before the `try { agent->prompt() }` block so failed attempts count toward the ceiling. The only calls that do NOT increment the counter are ceiling-blocked calls (where the limit is already reached and no dispatch occurs).
+- **Why**: Defends both NFR(ai-graceful) — AI failure never blocks the user-facing create-venture flow — and NFR(ai-ceiling) — a misconfigured or repeatedly-failing account cannot exhaust a provider's rate limit because each attempt costs one counter unit regardless of outcome.
+- **How to apply**: Structure every AI service method as: (a) ceiling check → return `[]` if over limit (no increment); (b) counter `firstOrCreate` + `increment` inside `DB::transaction()`; (c) `try { $response = Agent::make(...)->prompt(...); /* validate */ return $steps; } catch (\Throwable $e) { Log::warning(...); return []; }`. Do not retry — a single attempt with the configured timeout is the correct failure shape. See `App\Services\AiStepSuggester` and `docs/reference/contract-surfaces.md#ai-suggestion-surface-f-02` for the live reference implementation.
+- **Applies to**: plan, plan-review, implement, impl-review

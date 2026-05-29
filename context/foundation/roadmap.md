@@ -3,7 +3,7 @@ project: GOAITracker
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-05-27
+updated: 2026-05-28
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -39,8 +39,8 @@ entire product thesis fails; everything else only matters once this works.
 | ID    | Change ID                          | Outcome (user can …)                                                    | Prerequisites | PRD refs                                              | Status   |
 | ----- | ---------------------------------- | ----------------------------------------------------------------------- | ------------- | ----------------------------------------------------- | -------- |
 | F-01  | minimal-auth-and-isolation         | (foundation) email+password auth + every query scoped to the owner      | —             | FR-001, FR-002, FR-003, Access Control, NFR(isolation), NFR(pw-hash) | ready    |
-| F-02  | ai-suggestion-service              | (foundation) LLM step service wired, per-user 24h ceiling, graceful fail | F-01          | FR-008, FR-009, NFR(ai-ceiling), NFR(ai-graceful)     | proposed |
-| S-01  | create-venture-with-ai-plan        | create a venture and see exactly 7 AI-suggested steps                   | F-01, F-02    | US-01, FR-004, FR-008, FR-006                         | proposed |
+| F-02  | ai-suggestion-service              | (foundation) LLM step service wired, per-user 24h ceiling, graceful fail | F-01          | FR-008, FR-009, NFR(ai-ceiling), NFR(ai-graceful)     | ready    |
+| S-01  | create-venture-with-ai-plan        | create a venture and see exactly 7 AI-suggested steps                   | F-01, F-02    | US-01, FR-004, FR-008, FR-006                         | done     |
 | S-02  | edit-and-track-steps               | add / edit / delete / complete steps and see progress                   | S-01          | FR-010, FR-011, FR-012, FR-013, FR-018, NFR(edit-latency) | proposed |
 | S-03  | extend-plan-with-ai                | trigger AI to append more steps (append-only, off-metric)               | S-01, F-02    | FR-009                                                | proposed |
 | S-04  | list-and-delete-ventures           | view a list of own ventures, open or delete one                         | S-01          | FR-005, FR-006, FR-007                                | proposed |
@@ -94,9 +94,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Parallel with:** —
 - **Blockers:** —
 - **Unknowns:**
-  - Confirm the LLM provider — OpenAI assumed (the `OPENAI_API_KEY` slot is already stubbed in `render.yaml` / deploy-plan). Owner: user. Block: no.
+  - Confirm the LLM provider — Groq tentatively assumed (free-forever permanent tier, OpenAI-compatible API, fits the F-02 graceful-fail + 24h-ceiling NFRs cleanly). Generic `AI_API_KEY` slot will be wired into `render.yaml` when F-02 lands. Owner: user. Block: no.
 - **Risk:** Provider not yet formally chosen; treated as non-blocking because the key slot is stubbed and swapping providers behind the HTTP client is cheap. Sequenced before the AI slices so both S-01 and S-03 consume one rate-limited service instead of duplicating the integration and the 24h ceiling.
-- **Status:** proposed
+- **Status:** ready
 
 ## Slices
 
@@ -110,7 +110,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** This is the validation milestone — if AI-suggested steps don't land as a usable starting plan, the product thesis fails. Sequenced as early as its two foundations allow; the graceful-failure path (FR-008 acceptance) must ship with it, not after.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Edit and track steps
 
@@ -178,7 +178,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | ---------- | ---------------------------------- | -------------------------------------------------------- | --------------------- | -------------------------------------- |
 | F-01       | minimal-auth-and-isolation         | Auth (email+password) + per-user data isolation          | yes                   | Run `/10x-plan minimal-auth-and-isolation` |
 | F-02       | ai-suggestion-service              | AI step-suggestion service + 24h call ceiling            | no                    | Needs F-01; confirm LLM provider       |
-| S-01       | create-venture-with-ai-plan        | Create venture → 7 AI-suggested steps                    | no                    | Needs F-01, F-02 (north star)          |
+| S-01       | create-venture-with-ai-plan        | Create venture → 7 AI-suggested steps                    | done                  | Needs F-01, F-02 (north star)          |
 | S-02       | edit-and-track-steps               | Edit / add / delete / complete steps + progress          | no                    | Needs S-01                             |
 | S-03       | extend-plan-with-ai                | Extend step plan via AI (append-only)                    | no                    | Needs S-01, F-02                       |
 | S-04       | list-and-delete-ventures           | Venture list + delete venture                            | no                    | Needs S-01                             |
@@ -189,7 +189,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One ro
 
 ## Open Roadmap Questions
 
-1. **Which LLM provider backs the AI step-suggestion service?** — Owner: user. Block: none (proceeding on OpenAI as the assumed default, since the `OPENAI_API_KEY` slot is already stubbed in `render.yaml` and the deploy plan; the framework HTTP client makes a later swap cheap). Gates the implementation detail of F-02, S-01, and S-03 if the answer changes.
+1. **Which LLM provider backs the AI step-suggestion service?** — Owner: user. Block: none (proceeding on Groq as the tentative default: OpenAI-compatible endpoint, permanent free tier with 14,400 RPD / 30 RPM that comfortably fits the F-02 24h-ceiling NFR, no credit card required. F-02 will wire a generic `AI_API_KEY` env var so a later swap to OpenRouter / OpenAI / Anthropic / Gemini is a config change, not a refactor). Gates the implementation detail of F-02, S-01, and S-03 if the answer changes.
 
 ## Parked
 
