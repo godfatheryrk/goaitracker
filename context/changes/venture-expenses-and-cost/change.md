@@ -1,7 +1,7 @@
 ---
 change_id: venture-expenses-and-cost
 title: Venture expenses and cost
-status: plan_reviewed
+status: implemented
 created: 2026-05-29
 updated: 2026-05-29
 archived_at: null

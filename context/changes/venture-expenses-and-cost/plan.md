@@ -638,12 +638,12 @@ Seven tests total. Breakdown: `AddExpenseTest` (2), `EditExpenseTest` (2), `Dele
 
 #### Automated
 
-- [ ] 3.1 All new feature tests pass: `composer run test`
-- [ ] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 3.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
+- [x] 3.1 All new feature tests pass: `composer run test`
+- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 3.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
 
 #### Manual
 
-- [ ] 3.4 `docs/reference/contract-surfaces.md` "Expense surface (S-06)" reads sensibly with working file:line references and the line-3 reservation for S-05 unambiguous
-- [ ] 3.5 `context/foundation/roadmap.md` S-06 row is `done` in the table, the slice block, and the Backlog Handoff column
-- [ ] 3.6 `context/changes/venture-expenses-and-cost/change.md` flipped to `status: implemented`, `updated` bumped to the implementation date
+- [x] 3.4 `docs/reference/contract-surfaces.md` "Expense surface (S-06)" reads sensibly with working file:line references and the line-3 reservation for S-05 unambiguous
+- [x] 3.5 `context/foundation/roadmap.md` S-06 row is `done` in the table, the slice block, and the Backlog Handoff column
+- [x] 3.6 `context/changes/venture-expenses-and-cost/change.md` flipped to `status: implemented`, `updated` bumped to the implementation date
