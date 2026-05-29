@@ -477,11 +477,11 @@ The nine tests above. Total breakdown: AddStepTest (2), EditStepTest (3), Delete
 
 #### Automated
 
-- [x] 3.1 All new feature tests pass: `composer run test`
-- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 3.3 `php artisan route:list` still shows the six `steps.*` routes
+- [x] 3.1 All new feature tests pass: `composer run test` — c9c3990
+- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test` — c9c3990
+- [x] 3.3 `php artisan route:list` still shows the six `steps.*` routes — c9c3990
 
 #### Manual
 
-- [x] 3.4 `docs/reference/contract-surfaces.md` "Step surface (S-02)" reads sensibly with working file:line references and the source-immutability invariant unambiguous
-- [x] 3.5 `context/foundation/roadmap.md` S-02 row is `done` in the table, the slice block, and the Backlog Handoff column
+- [x] 3.4 `docs/reference/contract-surfaces.md` "Step surface (S-02)" reads sensibly with working file:line references and the source-immutability invariant unambiguous — c9c3990
+- [x] 3.5 `context/foundation/roadmap.md` S-02 row is `done` in the table, the slice block, and the Backlog Handoff column — c9c3990
