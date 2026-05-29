@@ -317,11 +317,11 @@ Run `\App\Models\Step::where('venture_id', $v)->pluck('source', 'body')` after a
 
 #### Manual
 
-- [ ] 1.4 Happy path keep-all: click "Suggest more with AI" → 7 candidates rendered, all checked → submit → 14 total steps; the 7 new have `source = ai_extension` (verified via tinker)
-- [ ] 1.5 Partial keep: same flow, uncheck 4 of 7 → submit → 3 new steps appended with contiguous positions after the previous max
-- [ ] 1.6 Keep-none: same flow, uncheck all 7 → submit → no new steps, no flash, silent return to `ventures.show`
-- [ ] 1.7 Empty-state CTA: a venture with 0 steps shows both "+ Add your first step" AND "Suggest more with AI"; the latter exercises the same flow end-to-end
-- [ ] 1.8 AI-unavailable flash: force `AiStepSuggester::suggestSteps()` to return `[]` → click "Suggest more with AI" → no preview, amber `ai_unavailable` notice on `ventures.show` with extension-specific wording
+- [x] 1.4 Happy path keep-all: click "Suggest more with AI" → 7 candidates rendered, all checked → submit → 14 total steps; the 7 new have `source = ai_extension` (verified via tinker)
+- [x] 1.5 Partial keep: same flow, uncheck 4 of 7 → submit → 3 new steps appended with contiguous positions after the previous max
+- [x] 1.6 Keep-none: same flow, uncheck all 7 → submit → no new steps, no flash, silent return to `ventures.show`
+- [x] 1.7 Empty-state CTA: a venture with 0 steps shows both "+ Add your first step" AND "Suggest more with AI"; the latter exercises the same flow end-to-end
+- [x] 1.8 AI-unavailable flash: force `AiStepSuggester::suggestSteps()` to return `[]` → click "Suggest more with AI" → no preview, amber `ai_unavailable` notice on `ventures.show` with extension-specific wording
 
 ### Phase 2: Test matrix + cross-slice handoff
 
@@ -333,5 +333,5 @@ Run `\App\Models\Step::where('venture_id', $v)->pluck('source', 'body')` after a
 
 #### Manual
 
-- [ ] 2.4 `docs/reference/contract-surfaces.md` "Step extension surface (S-03)" section is self-sufficient (a reader can implement against it without opening this plan) and the suggester-not-called assertion is clearly tied to NFR(ai-ceiling) per-user accounting
-- [ ] 2.5 `context/foundation/roadmap.md` S-03 row is `done` in the "At a glance" table, the slice block, and the Backlog Handoff column
+- [x] 2.4 `docs/reference/contract-surfaces.md` "Step extension surface (S-03)" section is self-sufficient (a reader can implement against it without opening this plan) and the suggester-not-called assertion is clearly tied to NFR(ai-ceiling) per-user accounting
+- [x] 2.5 `context/foundation/roadmap.md` S-03 row is `done` in the "At a glance" table, the slice block, and the Backlog Handoff column
