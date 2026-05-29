@@ -311,9 +311,9 @@ Run `\App\Models\Step::where('venture_id', $v)->pluck('source', 'body')` after a
 
 #### Automated
 
-- [x] 1.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [x] 1.2 Existing test suite still green: `composer run test`
-- [x] 1.3 `php artisan route:list` shows the two new `steps.suggestions.*` routes under the `auth` middleware
+- [x] 1.1 Linting / formatting passes: `vendor/bin/pint --test` — dfb89ab
+- [x] 1.2 Existing test suite still green: `composer run test` — dfb89ab
+- [x] 1.3 `php artisan route:list` shows the two new `steps.suggestions.*` routes under the `auth` middleware — dfb89ab
 
 #### Manual
 
@@ -327,9 +327,9 @@ Run `\App\Models\Step::where('venture_id', $v)->pluck('source', 'body')` after a
 
 #### Automated
 
-- [ ] 2.1 All new feature tests pass: `composer run test`
-- [ ] 2.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 2.3 `php artisan route:list` still shows the two `steps.suggestions.*` routes
+- [x] 2.1 All new feature tests pass: `composer run test`
+- [x] 2.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 2.3 `php artisan route:list` still shows the two `steps.suggestions.*` routes
 
 #### Manual
 

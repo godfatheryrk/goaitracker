@@ -218,6 +218,54 @@ Writes that genuinely need to set `source` (the AI-initial seed loop in `Venture
 
 ---
 
+## Step extension surface (S-03)
+
+**Established by**: S-03 (`context/changes/extend-plan-with-ai/`).
+
+**PRD anchors**: FR-009 (trigger AI to extend the step list on demand; extension steps do NOT count toward the FR-008 primary-metric AI pool), NFR(ai-ceiling), NFR(ai-graceful).
+
+### Routes (all under the `auth` middleware, nested under `ventures/{venture}`)
+
+- `steps.suggestions.preview` (POST `/ventures/{venture}/steps/suggestions`, `whereNumber('venture')`) — call `AiStepSuggester::suggestSteps()` with the venture's current step bodies as `$currentSteps`; on success render `steps.suggestions.preview`, on `[]` flash `ai_unavailable` and redirect to `ventures.show`. POST (not GET) because the call has the side effect of incrementing the per-user AI counter — GET would let browser prefetch / bookmark / refresh re-fire AI.
+- `steps.suggestions.store` (POST `/ventures/{venture}/steps/suggestions/confirm`, `whereNumber('venture')`) — validate `SuggestStepsRequest`, filter the previewed rows by the `keep` flag, persist the chosen rows as `ai_extension` steps appended to the tail, redirect to `ventures.show`. No AI call here — the suggester ran in the earlier preview request.
+
+### Access path rule (realization of the F-01 / S-02 contract)
+
+Both actions resolve the venture through the same singly-scoped relationship chain as the rest of the step surface: `$ventureModel = $request->user()->ventures()->findOrFail($venture);`. This produces **404 (not 403)** for a foreign venture. Critically, the venture-resolution `findOrFail` MUST be the **first statement** of `suggest()` — it throws 404 BEFORE the suggester is dispatched, so a user posting to another user's venture cannot burn that user's per-user AI ceiling (the F-02 counter increments before dispatch, NFR(ai-ceiling) per-user accounting). The isolation test asserts this explicitly: the `AiStepSuggester` mock is set `->shouldReceive('suggestSteps')->never()` and user B's `AiCallCounter` count is asserted to stay 0.
+
+### Preview-then-confirm flow
+
+The user-selection step resolves the partial-persistence question: the user decides which of the 7 candidates to keep, so a partial-DB error after confirmation is a real bug (handled by `DB::transaction`), not a product question.
+
+- **Preview** (`suggest`): renders `steps.suggestions.preview` carrying the candidate bodies as hidden `suggestions[*][body]` fields and default-checked `suggestions[*][keep]` checkboxes. Carried as hidden form fields (not session state) so the selection survives the round-trip without re-fetching from AI. A refresh on the preview result resubmits the form (re-fires AI) — annoying but bounded by the per-day ceiling, not a correctness bug.
+- **Confirm** (`storeSuggestions`): `$chosen = array_filter($rows, fn ($row) => ! empty($row['keep']))` (browsers omit unchecked boxes entirely, so `keep` is a presence flag). Position is computed once before the loop (`$nextPosition = (max(position) ?? -1) + 1`) then incremented per persisted row, so kept rows land contiguously at the tail. The persistence loop runs inside `DB::transaction` (all-or-nothing). Keeping none → 0 rows persist, no flash, plain redirect — explicit user choice, not a failure.
+
+### Source invariant (FR-008 metric carve-out)
+
+Confirmed rows are persisted with `source = StepSource::AiExtension` via `->forceFill(['owner_id' => …, 'source' => StepSource::AiExtension])`. Because `source` is not in `Step::$fillable` (S-02 hardening) and `SuggestStepsRequest` whitelists only `suggestions.*.body` + `suggestions.*.keep`, a tampered payload carrying `source: ai_initial` cannot pollute the FR-008 metric pool — three defense layers stack (model fillable + FormRequest whitelist + controller forceFill). `ai_extension` rows are excluded from the "3 of 7 kept" denominator structurally (the metric measures only `ai_initial`); no extra controller code enforces the carve-out.
+
+### Failure-flash contract (reuses S-01's `ai_unavailable`)
+
+The suggest endpoint reuses S-01's amber `ai_unavailable` flash key with extension-specific wording: "AI couldn't suggest more steps right now — try again later or add steps manually." Both provider-failure and over-ceiling paths return `[]` from `AiStepSuggester` and take this branch identically. The `ventures.show` flash-rendering block picks up either S-01's or S-03's wording without view-level branching.
+
+### Length cap
+
+`SuggestStepsRequest` enforces `suggestions.*.body: ['required', 'string', 'min:1', 'max:200']` and `suggestions: ['required', 'array', 'min:1', 'max:7']`. The `max:200` matches `steps.body` column width and F-02's `config('ai.step_suggestion.max_step_length')` — per the [AI suggestion surface](#ai-suggestion-surface-f-02) "Length cap coupling" note, all move in lockstep. The `max:7` outer ceiling defends against tampering that adds extra rows.
+
+### Test proof
+
+- `tests/Feature/Steps/SuggestExtensionTest.php` — 4 tests: happy-path preview render (7 hidden body fields + 7 keep checkboxes, `suggestions` view-data), AI-unavailable flash + redirect + no rows persisted, two-user-404 on the suggest endpoint **with the suggester asserted never-called and user B's counter asserted 0** (the assertion that closes the "B can't burn A's ceiling" loop), and guest-POST → 302 to `/login`.
+- `tests/Feature/Steps/StoreSuggestedStepsTest.php` — 4 tests: keep-all (7 `ai_extension` rows appended at positions 3–9, owner = current user, bodies in order), keep-subset (only checked rows persist in order at contiguous positions), keep-none (no rows, no flash, redirect), and two-user-404 on the confirm endpoint (A's step count unchanged).
+
+### Out of scope for S-03 (deferred / explicitly not done)
+
+- Regenerate / re-roll suggestions on the preview page → PRD §Non-Goals ("No 'regenerate AI suggestion' action"). Cancel + re-trigger (counting another ceiling unit) is the path.
+- Inline body editing on the preview → v2; the user keeps a row then edits it via S-02's step Edit link.
+- Counter-status surface ("N AI calls left today") → v2.
+- Soft-cap warning at high step counts → v2 (PRD §Open Questions / FR-009 Socrates resolution).
+
+---
+
 ## Future evolution
 
 > Both expansions below are PRD-contemplated in the Non-Goals _"forward-compatibility note: if added in v2+, the per-user-isolation NFR must continue to hold"_ but are NOT in the v1 roadmap. These notes exist so the F-01 contract does not foreclose either path — and so S-01 does not pick a structure (e.g. a `unique` constraint that assumes one venture per user) that would block them.
