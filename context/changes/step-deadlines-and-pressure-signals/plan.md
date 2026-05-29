@@ -264,26 +264,26 @@ The list adds one indexed-friendly count subquery per index render (additive to 
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly (fresh `php artisan migrate`)
-- [ ] 1.2 New + existing tests pass (`composer run test`)
-- [ ] 1.3 Formatting clean (`vendor/bin/pint --test`)
+- [x] 1.1 Migration applies cleanly (fresh `php artisan migrate`) — c187ff7
+- [x] 1.2 New + existing tests pass (`composer run test`) — c187ff7
+- [x] 1.3 Formatting clean (`vendor/bin/pint --test`) — c187ff7
 
 #### Manual
 
-- [ ] 1.4 Adding a step with a deadline and re-opening edit shows the saved date
-- [ ] 1.5 Clearing the date on the edit form removes the deadline (no error)
+- [x] 1.4 Adding a step with a deadline and re-opening edit shows the saved date — 8abc6b4 (edit-form prefill `$step->deadline?->format('Y-m-d')`; persistence covered by `StepDeadlineTest::test_add_step_persists_deadline`)
+- [x] 1.5 Clearing the date on the edit form removes the deadline (no error) — c187ff7 (covered by `StepDeadlineTest::test_edit_step_with_empty_deadline_clears_it`)
 
 ### Phase 2: Deadline UI + live toggle
 
 #### Automated
 
-- [ ] 2.1 All tests pass (`composer run test`)
-- [ ] 2.2 Front-end build succeeds (`npm run build`)
-- [ ] 2.3 Formatting clean (`vendor/bin/pint --test`)
+- [x] 2.1 All tests pass (`composer run test`) — 8abc6b4 (72 passed, 287 assertions)
+- [x] 2.2 Front-end build succeeds (`npm run build`) — 8abc6b4
+- [x] 2.3 Formatting clean (`vendor/bin/pint --test`) — 8abc6b4
 
 #### Manual
 
-- [ ] 2.4 Detail view: imminent=amber, overdue=red "Overdue", future=muted, none=absent
-- [ ] 2.5 Completing an overdue step removes red emphasis without reload; un-completing restores it
-- [ ] 2.6 List view: marker present for imminent/overdue incomplete step; gone after completing/clearing
-- [ ] 2.7 Right side of the list row is free for S-06's cost cell (no layout breakage)
+- [x] 2.4 Detail view: imminent=amber, overdue=red "Overdue", future=muted, none=absent — 8abc6b4 (covered by `ShowVentureDeadlineTest` render matrix)
+- [x] 2.5 Completing an overdue step removes red emphasis without reload; un-completing restores it — 8abc6b4 (deadline-only `data-pressure-class` + guarded `app.js` toggle; completion-agnostic class retention covered by `ShowVentureDeadlineTest::test_completed_overdue_step_renders_no_applied_emphasis_but_keeps_data_class`)
+- [x] 2.6 List view: marker present for imminent/overdue incomplete step; gone after completing/clearing — 8abc6b4 (covered by `ListVenturesTest` marker present/absent + pressure-aggregate exclusion cases)
+- [x] 2.7 Right side of the list row is free for S-06's cost cell (no layout breakage) — 8abc6b4 (marker is line 3 of stacked left metadata; no right-side column introduced; line-2 cost slot reserved)
