@@ -24,6 +24,18 @@
                             @enderror
                         </div>
 
+                        <div class="mt-4">
+                            <label for="deadline" class="block font-medium text-sm text-gray-700">
+                                Deadline <span class="text-gray-400">(optional)</span>
+                            </label>
+                            <input type="date" id="deadline" name="deadline"
+                                   value="{{ old('deadline', $step->deadline?->format('Y-m-d')) }}"
+                                   class="block mt-1 border-gray-300 rounded-md shadow-sm">
+                            @error('deadline')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="flex items-center justify-end mt-6 space-x-4">
                             <a href="{{ route('ventures.show', $venture) }}"
                                class="text-sm text-gray-600 hover:text-gray-900">

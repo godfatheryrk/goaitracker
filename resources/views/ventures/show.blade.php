@@ -65,9 +65,31 @@
                                                    value="1"
                                                    {{ $step->is_completed ? 'checked' : '' }}
                                                    class="mt-1 rounded border-gray-300">
-                                            <span data-step-body
-                                                  class="{{ $step->is_completed ? 'line-through text-gray-400' : '' }}">
-                                                {{ $step->body }}
+                                            <span class="flex flex-col">
+                                                <span data-step-body
+                                                      class="{{ $step->is_completed ? 'line-through text-gray-400' : '' }}">
+                                                    {{ $step->body }}
+                                                </span>
+                                                @if ($step->deadline)
+                                                    @php
+                                                        // data-pressure-class is deadline-only (completion-agnostic),
+                                                        // so the live toggle can restore emphasis on un-complete even
+                                                        // for a step that loaded completed. Whether it is *shown* now
+                                                        // is the separate `! is_completed` render gate below.
+                                                        $pressure = $step->deadlinePressure();
+                                                        $pressureClass = match ($pressure) {
+                                                            'overdue' => 'text-red-600 font-medium',
+                                                            'imminent' => 'text-amber-700 font-medium',
+                                                            default => '',
+                                                        };
+                                                        $label = $pressure === 'overdue' ? 'Overdue' : 'Due';
+                                                    @endphp
+                                                    <span data-deadline-badge
+                                                          data-pressure-class="{{ $pressureClass }}"
+                                                          class="text-xs text-gray-500 {{ $step->is_completed ? '' : $pressureClass }}">
+                                                        {{ $label }} {{ $step->deadline->format('M j') }}
+                                                    </span>
+                                                @endif
                                             </span>
                                         </label>
                                         <noscript>

@@ -111,6 +111,46 @@ class ListVenturesTest extends TestCase
         $this->assertSame(0, $listed->pressured_steps_count);
     }
 
+    public function test_list_renders_pressure_marker_when_pressured(): void
+    {
+        $user = User::factory()->create();
+        $venture = $user->ventures()->create([
+            'title' => 'Pressured venture',
+            'description' => null,
+        ]);
+
+        $venture->steps()->make([
+            'body' => 'Imminent step',
+            'position' => 0,
+            'deadline' => today()->addDay(),
+        ])->forceFill(['owner_id' => $user->id, 'source' => StepSource::Manual])->save();
+
+        $response = $this->actingAs($user)->get(route('ventures.index'));
+
+        $response->assertOk();
+        $response->assertSeeText('Deadline pressure');
+    }
+
+    public function test_list_omits_pressure_marker_when_not_pressured(): void
+    {
+        $user = User::factory()->create();
+        $venture = $user->ventures()->create([
+            'title' => 'Calm venture',
+            'description' => null,
+        ]);
+
+        $venture->steps()->make([
+            'body' => 'Far future step',
+            'position' => 0,
+            'deadline' => today()->addDays(10),
+        ])->forceFill(['owner_id' => $user->id, 'source' => StepSource::Manual])->save();
+
+        $response = $this->actingAs($user)->get(route('ventures.index'));
+
+        $response->assertOk();
+        $response->assertDontSeeText('Deadline pressure');
+    }
+
     public function test_step_save_touches_parent_venture_updated_at(): void
     {
         $user = User::factory()->create();

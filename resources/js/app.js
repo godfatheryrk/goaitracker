@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('form[data-toggle-completion]').forEach((form) => {
         const checkbox = form.querySelector('input[type="checkbox"]');
         const bodyEl = form.querySelector('[data-step-body]');
+        const deadlineBadge = form.querySelector('[data-deadline-badge]');
         if (!checkbox) {
             return;
         }
@@ -35,6 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (bodyEl) {
                     bodyEl.classList.toggle('line-through', data.is_completed);
                     bodyEl.classList.toggle('text-gray-400', data.is_completed);
+                }
+
+                if (deadlineBadge) {
+                    // data-pressure-class is deadline-only (completion-agnostic):
+                    // drop the emphasis on complete, restore it on un-complete.
+                    // Guard the empty string so split() doesn't add a stray class.
+                    const pressureClasses = (deadlineBadge.dataset.pressureClass || '')
+                        .split(' ')
+                        .filter(Boolean);
+                    pressureClasses.forEach((cls) => {
+                        deadlineBadge.classList.toggle(cls, !data.is_completed);
+                    });
                 }
 
                 if (progressTextEl) {
