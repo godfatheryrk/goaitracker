@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['body', 'source', 'position'])]
+#[Fillable(['body', 'position'])]
 class Step extends Model
 {
     use HasFactory;
@@ -17,6 +17,8 @@ class Step extends Model
         'is_completed' => 'boolean',
         'source' => StepSource::class,
     ];
+
+    protected $touches = ['venture'];
 
     public function venture(): BelongsTo
     {

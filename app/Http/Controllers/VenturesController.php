@@ -14,6 +14,19 @@ class VenturesController extends Controller
 {
     public function __construct(private readonly AiStepSuggester $suggester) {}
 
+    public function index(Request $request): View
+    {
+        $ventures = $request->user()->ventures()
+            ->withCount([
+                'steps',
+                'steps as completed_steps_count' => fn ($q) => $q->where('is_completed', true),
+            ])
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return view('ventures.index', ['ventures' => $ventures]);
+    }
+
     public function create(): View
     {
         return view('ventures.create');
@@ -45,9 +58,11 @@ class VenturesController extends Controller
             foreach ($steps as $i => $body) {
                 $venture->steps()->make([
                     'body' => $body,
-                    'source' => StepSource::AiInitial,
                     'position' => $i,
-                ])->forceFill(['owner_id' => $user->id])->save();
+                ])->forceFill([
+                    'owner_id' => $user->id,
+                    'source' => StepSource::AiInitial,
+                ])->save();
             }
 
             return $venture;
@@ -63,7 +78,20 @@ class VenturesController extends Controller
     public function show(Request $request, int $venture): View
     {
         $model = $request->user()->ventures()->with('steps')->findOrFail($venture);
+        $completed = $model->steps->where('is_completed', true)->count();
+        $total = $model->steps->count();
 
-        return view('ventures.show', ['venture' => $model]);
+        return view('ventures.show', [
+            'venture' => $model,
+            'completed' => $completed,
+            'total' => $total,
+        ]);
+    }
+
+    public function destroy(Request $request, int $venture): RedirectResponse
+    {
+        $request->user()->ventures()->findOrFail($venture)->delete();
+
+        return redirect()->route('ventures.index');
     }
 }

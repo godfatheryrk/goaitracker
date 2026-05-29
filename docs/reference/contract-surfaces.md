@@ -45,7 +45,7 @@ If any item is missing when S-01 reaches `/10x-plan-review`, the reviewer MUST b
 
 **Established by**: F-01.
 
-- **Routes**: `register` (GET/POST), `login` (GET/POST), `logout` (POST), `dashboard` (GET). Named exactly. The `login` route name is referenced by the `auth` middleware redirect, the `LoginRequest` throttle response, and downstream slice tests — do not rename without a coordinated update.
+- **Routes**: `register` (GET/POST), `login` (GET/POST), `logout` (POST), `dashboard` (GET). Named exactly. The `login` route name is referenced by the `auth` middleware redirect, the `LoginRequest` throttle response, and downstream slice tests — do not rename without a coordinated update. The `dashboard` route name is the canonical post-login landing target referenced by `RegisteredUserController::store` and `LoginRequest` via `redirect()->intended(route('dashboard'))`; S-04 reassigned its underlying action from the create form to the venture list (`VenturesController@index`) while preserving the route name and the `/dashboard` URL.
 - **Login throttle**: 5 failed attempts per `Str::lower(email)|ip` key, 60s decay; success clears the limiter. Mirrors Laravel Breeze's `LoginRequest` contract.
 - **Session security**: regenerate on login, invalidate + regenerate token on logout.
 - **Derived `name`**: registration derives `users.name` from the email local-part (portion before `@`). The `users.name` column remains NOT NULL; no UI collects it.
@@ -111,8 +111,8 @@ Swapping providers is an env-only change. Note: the provider must support plain 
 
 ### Routes (all under the `auth` middleware)
 
-- `dashboard` (GET) — post-login landing surface. Currently aliased to `ventures.create` so existing `route('dashboard')` callers (`RegisteredUserController::store`, `LoginRequest`) keep working without an edit. When S-04 lands and the dashboard concept becomes the venture list, the `dashboard` route name reassigns; `ventures.create` stays.
-- `ventures.create` (GET `/ventures/create`) — canonical name for the create form. Same handler as `dashboard`.
+- `dashboard` (GET) — post-login landing surface. **S-04 has reassigned the `dashboard` route name to `VenturesController@index` (the venture list)**; the `/dashboard` URL persists for the F-01 intended-redirect contract (`RegisteredUserController::store`, `LoginRequest`), and the route name keeps working for nav links without a per-callsite edit. See [Venture list + destroy surface (S-04)](#venture-list--destroy-surface-s-04) for the new landing behaviour.
+- `ventures.create` (GET `/ventures/create`) — canonical name for the create form. Reached from the venture list's "+ New venture" / empty-state CTA; no longer aliased to `dashboard`.
 - `ventures.store` (POST `/ventures`) — validates `CreateVentureRequest`, calls `AiStepSuggester::suggestSteps()` OUTSIDE a DB transaction (so a failed venture-insert cannot roll back the counter increment for an AI attempt that really happened), then persists `Venture` + 0-or-7 `Step` rows inside a transaction, then redirects to `ventures.show`.
 - `ventures.show` (GET `/ventures/{venture}`, `whereNumber('venture')`) — read-only render of title, description, and step list in `position` order. AI-unavailable flash notice renders above the step list when `session('ai_unavailable')` is set.
 
@@ -143,11 +143,179 @@ The column itself is string-typed (not a native DB enum) for SQLite/Postgres por
 
 - Step edit / delete / completion toggle / manual add → **S-02**.
 - AI extension trigger (`FR-009`) → **S-03**.
-- Venture list / venture delete UI → **S-04**.
+- Venture list / venture delete UI → **S-04** — see [Venture list + destroy surface (S-04)](#venture-list--destroy-surface-s-04).
 - Deadlines on steps + the 3-day badge / list-level marker → **S-05**.
 - Expenses → **S-06**.
 
 S-01 deliberately does not pre-build any of those surfaces; downstream slices add them under the same access-path rule.
+
+---
+
+## Step surface (S-02)
+
+**Established by**: S-02 (`context/changes/edit-and-track-steps/`).
+
+**PRD anchors**: FR-010 (manual add), FR-011 (edit body), FR-012 (delete with confirmation), FR-013 (toggle completion directly on the list — no confirmation), FR-018 (proportion of completed vs total), NFR(edit-latency).
+
+### Routes (all under the `auth` middleware, nested under `ventures/{venture}`)
+
+- `steps.create` (GET `/ventures/{venture}/steps/create`, `whereNumber('venture')`) — render the add-step form bound to the venture.
+- `steps.store` (POST `/ventures/{venture}/steps`, `whereNumber('venture')`) — validate `CreateStepRequest`, persist one `manual` step appended to the list (`max(position) + 1`), redirect to `ventures.show`.
+- `steps.edit` (GET `/ventures/{venture}/steps/{step}/edit`, both params `whereNumber`) — render the edit form pre-populated with the step's current body.
+- `steps.update` (PATCH `/ventures/{venture}/steps/{step}`, both params `whereNumber`) — validate `EditStepRequest`, write `body` only, redirect to `ventures.show`.
+- `steps.destroy` (DELETE `/ventures/{venture}/steps/{step}`, both params `whereNumber`) — delete the step row, redirect to `ventures.show`. Confirmation is the frontend's job (native `confirm()` in `ventures.show`).
+- `steps.completion` (PATCH `/ventures/{venture}/steps/{step}/completion`, both params `whereNumber`) — flip `is_completed`. Two response shapes (see _Toggle endpoint response contract_ below).
+
+### Access path rule (realization of the F-01 contract on a nested resource)
+
+Every authenticated action on the step surface MUST resolve both the venture and the step through the doubly-scoped relationship chain:
+
+```php
+$ventureModel = $request->user()->ventures()->findOrFail($venture);
+$stepModel = $ventureModel->steps()->findOrFail($step);
+```
+
+This produces **404 (not 403)** for either a foreign venture OR a foreign step under an owned venture — the relationship-scoped query simply finds no row, so the user cannot distinguish "exists but forbidden" from "does not exist." No global `findOrFail(Step::class)`, no `Route::bind('step', …)`, no global scope on the `Step` model. The same rule applies to S-03 / S-05 when they extend this surface (e.g. S-03's AI-extension trigger nests on the same `ventures/{venture}` parent).
+
+### Source-immutability invariant (FR-008 metric depends on this)
+
+The `steps.source` column carries the frozen FR-008 primary-metric AI-pool snapshot at venture creation. Any code path that lets an edit overwrite `source` corrupts the metric for every venture from that point forward. Defense in depth is the discipline:
+
+- **Layer 1 — `Step::$fillable = ['body', 'position']`.** `source` is NOT mass-assignable. `->update($input)` or `->fill($input)` cannot rewrite it. `is_completed` is also absent from `$fillable` (toggle is the only writer; see below).
+- **Layer 2 — `EditStepRequest` whitelists `body` only.** Even if a malicious client sends `source: manual` in the request body, the `validated()` array passed to `->update()` contains only `body`. The two layers stack: removing either still leaves the other as a backstop.
+
+Writes that genuinely need to set `source` (the AI-initial seed loop in `VenturesController::store`, the manual-add path in `StepsController::store`) use `->forceFill(['source' => StepSource::AiInitial])` or `['source' => StepSource::Manual]` — forcing the assignment is explicit and audited, not accidental.
+
+### Toggle endpoint response contract
+
+`StepsController::toggleCompletion` returns two response shapes depending on `Accept`:
+
+- `Accept: application/json` → **200 JSON** `{is_completed: bool, completed: int, total: int}`. The JS island consumes this to update the checkbox state, the body's `line-through` styling, and the progress text — all without a page reload (NFR(edit-latency) "≤1s perceived feedback" for FR-013).
+- Otherwise → **302 redirect** to `ventures.show`. This is the `<noscript>` Save-button fallback path — when JS is off, the form submits normally and the redirect lands the user back on the detail view with completion persisted.
+
+`is_completed` is NOT in `Step::$fillable`. The toggle action MUST set the attribute directly (`$step->is_completed = ! $step->is_completed; $step->save();`) — `->update(['is_completed' => ...])` would silently no-op. Any future code path writing this field MUST follow the same pattern.
+
+### Length cap
+
+`CreateStepRequest` and `EditStepRequest` enforce `body: ['required', 'string', 'min:1', 'max:200']`. The 200 matches both the `steps.body` column width (`string('body', 200)`) and F-02's `config('ai.step_suggestion.max_step_length')` — per the [AI suggestion surface](#ai-suggestion-surface-f-02) "Length cap coupling" note, all three move in lockstep.
+
+### Test proof
+
+- `tests/Feature/Steps/AddStepTest.php` — 2 tests covering FR-010 happy path (`manual` source, position appended at end, owner = current user) and the two-user-404 isolation boundary.
+- `tests/Feature/Steps/EditStepTest.php` — 3 tests covering FR-011 happy path, the source-immutability invariant (`source: manual` in the request body is rejected by the FormRequest whitelist; `source` remains `ai_initial`), and the two-user-404 isolation boundary.
+- `tests/Feature/Steps/DeleteStepTest.php` — 2 tests covering FR-012 happy path (row removed, redirect to show) and the two-user-404 isolation boundary. The "with confirmation" requirement is a frontend concern (native `confirm()`); the backend just deletes.
+- `tests/Feature/Steps/ToggleStepTest.php` — 2 tests covering FR-013 happy path on the JSON response shape (`patchJson` → `{is_completed: true, completed: 1, total: 1}`) and the two-user-404 isolation boundary on the same endpoint.
+- `tests/Feature/Ventures/ShowVentureProgressTest.php` — 1 test covering FR-018 ("X of Y completed" text) for the mixed-completion case (2/4). The 0/0 and N/N variants share the same render path and don't need separate proof for v1.
+
+### Out of scope for S-02 (deferred to downstream slices)
+
+- AI-extension trigger (FR-009) → **S-03** (adds `StepSource::AiExtension` writes to this surface).
+- Step deadlines + 3-day badge (FR-014, FR-020) → **S-05** (adds a `deadline` column and badge UI).
+- Venture list / venture delete UI (FR-005, FR-007) → **S-04**.
+- Expenses (FR-015–FR-017) → **S-06**.
+- Reorder action (drag-and-drop, position rewrite) — not in PRD scope; append-only adds with stable position remain the v1 model.
+- Undo for delete — PRD §Guardrails accepts the confirm dialog as the second-gesture requirement; undo is a v2 enhancement.
+
+---
+
+## Step extension surface (S-03)
+
+**Established by**: S-03 (`context/changes/extend-plan-with-ai/`).
+
+**PRD anchors**: FR-009 (trigger AI to extend the step list on demand; extension steps do NOT count toward the FR-008 primary-metric AI pool), NFR(ai-ceiling), NFR(ai-graceful).
+
+### Routes (all under the `auth` middleware, nested under `ventures/{venture}`)
+
+- `steps.suggestions.preview` (POST `/ventures/{venture}/steps/suggestions`, `whereNumber('venture')`) — call `AiStepSuggester::suggestSteps()` with the venture's current step bodies as `$currentSteps`; on success render `steps.suggestions.preview`, on `[]` flash `ai_unavailable` and redirect to `ventures.show`. POST (not GET) because the call has the side effect of incrementing the per-user AI counter — GET would let browser prefetch / bookmark / refresh re-fire AI.
+- `steps.suggestions.store` (POST `/ventures/{venture}/steps/suggestions/confirm`, `whereNumber('venture')`) — validate `SuggestStepsRequest`, filter the previewed rows by the `keep` flag, persist the chosen rows as `ai_extension` steps appended to the tail, redirect to `ventures.show`. No AI call here — the suggester ran in the earlier preview request.
+
+### Access path rule (realization of the F-01 / S-02 contract)
+
+Both actions resolve the venture through the same singly-scoped relationship chain as the rest of the step surface: `$ventureModel = $request->user()->ventures()->findOrFail($venture);`. This produces **404 (not 403)** for a foreign venture. Critically, the venture-resolution `findOrFail` MUST be the **first statement** of `suggest()` — it throws 404 BEFORE the suggester is dispatched, so a user posting to another user's venture cannot burn that user's per-user AI ceiling (the F-02 counter increments before dispatch, NFR(ai-ceiling) per-user accounting). The isolation test asserts this explicitly: the `AiStepSuggester` mock is set `->shouldReceive('suggestSteps')->never()` and user B's `AiCallCounter` count is asserted to stay 0.
+
+### Preview-then-confirm flow
+
+The user-selection step resolves the partial-persistence question: the user decides which of the 7 candidates to keep, so a partial-DB error after confirmation is a real bug (handled by `DB::transaction`), not a product question.
+
+- **Preview** (`suggest`): renders `steps.suggestions.preview` carrying the candidate bodies as hidden `suggestions[*][body]` fields and default-checked `suggestions[*][keep]` checkboxes. Carried as hidden form fields (not session state) so the selection survives the round-trip without re-fetching from AI. A refresh on the preview result resubmits the form (re-fires AI) — annoying but bounded by the per-day ceiling, not a correctness bug.
+- **Confirm** (`storeSuggestions`): `$chosen = array_filter($rows, fn ($row) => ! empty($row['keep']))` (browsers omit unchecked boxes entirely, so `keep` is a presence flag). Position is computed once before the loop (`$nextPosition = (max(position) ?? -1) + 1`) then incremented per persisted row, so kept rows land contiguously at the tail. The persistence loop runs inside `DB::transaction` (all-or-nothing). Keeping none → 0 rows persist, no flash, plain redirect — explicit user choice, not a failure.
+
+### Source invariant (FR-008 metric carve-out)
+
+Confirmed rows are persisted with `source = StepSource::AiExtension` via `->forceFill(['owner_id' => …, 'source' => StepSource::AiExtension])`. Because `source` is not in `Step::$fillable` (S-02 hardening) and `SuggestStepsRequest` whitelists only `suggestions.*.body` + `suggestions.*.keep`, a tampered payload carrying `source: ai_initial` cannot pollute the FR-008 metric pool — three defense layers stack (model fillable + FormRequest whitelist + controller forceFill). `ai_extension` rows are excluded from the "3 of 7 kept" denominator structurally (the metric measures only `ai_initial`); no extra controller code enforces the carve-out.
+
+### Failure-flash contract (reuses S-01's `ai_unavailable`)
+
+The suggest endpoint reuses S-01's amber `ai_unavailable` flash key with extension-specific wording: "AI couldn't suggest more steps right now — try again later or add steps manually." Both provider-failure and over-ceiling paths return `[]` from `AiStepSuggester` and take this branch identically. The `ventures.show` flash-rendering block picks up either S-01's or S-03's wording without view-level branching.
+
+### Length cap
+
+`SuggestStepsRequest` enforces `suggestions.*.body: ['required', 'string', 'min:1', 'max:200']` and `suggestions: ['required', 'array', 'min:1', 'max:7']`. The `max:200` matches `steps.body` column width and F-02's `config('ai.step_suggestion.max_step_length')` — per the [AI suggestion surface](#ai-suggestion-surface-f-02) "Length cap coupling" note, all move in lockstep. The `max:7` outer ceiling defends against tampering that adds extra rows.
+
+### Test proof
+
+- `tests/Feature/Steps/SuggestExtensionTest.php` — 4 tests: happy-path preview render (7 hidden body fields + 7 keep checkboxes, `suggestions` view-data), AI-unavailable flash + redirect + no rows persisted, two-user-404 on the suggest endpoint **with the suggester asserted never-called and user B's counter asserted 0** (the assertion that closes the "B can't burn A's ceiling" loop), and guest-POST → 302 to `/login`.
+- `tests/Feature/Steps/StoreSuggestedStepsTest.php` — 4 tests: keep-all (7 `ai_extension` rows appended at positions 3–9, owner = current user, bodies in order), keep-subset (only checked rows persist in order at contiguous positions), keep-none (no rows, no flash, redirect), and two-user-404 on the confirm endpoint (A's step count unchanged).
+
+### Out of scope for S-03 (deferred / explicitly not done)
+
+- Regenerate / re-roll suggestions on the preview page → PRD §Non-Goals ("No 'regenerate AI suggestion' action"). Cancel + re-trigger (counting another ceiling unit) is the path.
+- Inline body editing on the preview → v2; the user keeps a row then edits it via S-02's step Edit link.
+- Counter-status surface ("N AI calls left today") → v2.
+- Soft-cap warning at high step counts → v2 (PRD §Open Questions / FR-009 Socrates resolution).
+
+---
+
+## Venture list + destroy surface (S-04)
+
+**Established by**: S-04 (`context/changes/list-and-delete-ventures/`).
+
+**PRD anchors**: FR-005 (user can view a list of all their own ventures), FR-006 (single-venture detail view — reached from the list via each row's title link), FR-007 (user can delete a venture, with confirmation), NFR(isolation).
+
+### Routes (all under the `auth` middleware)
+
+- `ventures.index` (GET `/ventures`) — canonical RESTful name for the list.
+- `dashboard` (GET `/dashboard`) — **reassigned by S-04** from the create form to `VenturesController@index` (the same action as `ventures.index`). Two URLs (`/dashboard`, `/ventures`) share one action under two route names — mirrors the S-01 dashboard / `ventures.create` aliasing pattern. The route name `dashboard` is preserved so `route('dashboard')` callers in F-01 (`RegisteredUserController::store`, `LoginRequest::authenticate` → `redirect()->intended(route('dashboard'))`) and the nav home link continue to work without per-callsite edits. Tests written against the list use `route('ventures.index')`.
+- `ventures.destroy` (DELETE `/ventures/{venture}`, `whereNumber('venture')`) — delete one venture and (via the schema cascade) its step subtree.
+
+### Access path rule (realization of the F-01 contract)
+
+Both new actions resolve the venture through `$request->user()->ventures()` — the same singly-scoped relationship chain S-01 established. `index` calls `$request->user()->ventures()->withCount([...])->orderByDesc('updated_at')->get()`. `destroy` calls `$request->user()->ventures()->findOrFail($venture)->delete()`. This produces **404 (not 403)** for a foreign user POSTing a DELETE to a venture they don't own — the relationship-scoped query simply finds no row. No global `Venture::find($venture)->delete()`, no `Route::bind('venture', …)`, no global scope on the model.
+
+### Cascade semantics (schema-level, not application-level)
+
+`$venture->delete()` issues one `DELETE FROM ventures WHERE id = ?` statement; Postgres / SQLite cascade `steps.venture_id ON DELETE CASCADE` and remove the step subtree as part of the same transaction. **No application-level loop is needed** (and writing one would be wrong — model events on `Step` fire per row, and a partial-delete failure would leave the DB inconsistent). The `ai_call_counters` table is keyed on `owner_id` (NOT `venture_id`), so deleting a venture does NOT roll back any per-user 24h counter — the AI calls really happened, and the counter accounting must reflect that regardless of whether the venture they fed survives. No refund logic.
+
+### Sort: `ORDER BY updated_at DESC` (+ the `Step::$touches` coupling)
+
+The list orders by `updated_at DESC` so the venture the user last touched bubbles to the top — the shape that rewards the secondary success metric ("users return to a venture at least once") and the "+ X of Y completed" progress signal. Critically, **`Step::$touches = ['venture']`** is the wiring that makes this sort honest: without it, editing a step (S-02's edit / delete / toggle / create paths, S-03's AI-extension confirm path) would NOT bump the parent venture's `updated_at`, and a venture whose only recent activity is step edits would stay buried under a never-touched venture created later. The one-line `protected $touches = ['venture'];` on `Step` causes every step save/delete to issue `$venture->touch()` as part of the same transaction; downstream slices that add new step writers (S-05's deadline editor, S-06 if/when expenses move per-step) MUST not bypass `save()` / `delete()` (e.g., raw `DB::table('steps')->...`) without re-touching the parent. **If you remove `$touches`, the list sort lies silently — there is no surface that screams about it.**
+
+### Per-row aggregates (FR-018 mirror on the list)
+
+`withCount(['steps', 'steps as completed_steps_count' => fn ($q) => $q->where('is_completed', true)])` adds two subqueries per index render — `$venture->steps_count` (total) and `$venture->completed_steps_count` (filtered) — so each row renders `"X of Y steps completed"` (or `"—"` when `steps_count === 0`) without N+1. Laravel's named-subquery aggregate shape is the idiomatic way to combine filtered + unfiltered counts. The same `$completed / $total` signal already lives on the detail view (S-01 / S-02); the list mirrors it.
+
+### Confirmation gesture (NFR realization for FR-007)
+
+Delete is an inline `<form method="POST" onsubmit="return confirm('Delete this venture? This will also remove all its steps.')">` with `@csrf + @method('DELETE')` — the same native-`confirm()` pattern S-02's step-delete row uses. The blast radius is larger (a venture carries its step subtree, and S-05/S-06 will add deadlines + expenses), but the v1 confirm shape is uniform across both delete points. A heavier guard ("type the title", typed-confirm modal) is a v2 ergonomic enhancement noted in the §Out of scope sub-section below.
+
+### Test proof
+
+- `tests/Feature/Ventures/ListVenturesTest.php` — 3 tests: empty-state renders the "Create your first venture" CTA and the `route('ventures.create')` href is wired (FR-005 empty-state surface); user A sees their own ventures and does NOT see user B's title (FR-005 + F-01 isolation enforcement on the index endpoint); a step save advances the parent venture's `updated_at` (locks the `Step::$touches = ['venture']` wiring — the silent-lie failure mode named above is what this assertion catches).
+- `tests/Feature/Ventures/DeleteVentureTest.php` — 2 tests: owner can delete their own venture (target row gone, target step rows gone via cascade, sibling venture and its step rows survive — the sibling assertion locks cascade scope to `venture_id`, not over-cascading on `owner_id`); user B gets 404 (not 403) on user A's destroy URL and user A's venture is still in the DB (F-01 enforcement-checklist item 4 on the destroy endpoint).
+
+The guest-302-on-destroy assertion the F-01 enforcement checklist names is NOT separately ship-tested in this slice — the `auth` middleware boundary is structurally identical to the boundary already proven for `ventures.show` in `tests/Feature/Ventures/VentureIsolationTest::test_guest_gets_redirect_on_venture_show`. Documented here so a future reviewer doesn't read this as an oversight.
+
+### Out of scope for S-04 (deferred / explicitly not done)
+
+- Total-cost cell on the list row → **S-06** (FR-019 surfaces cost on both detail and list; the list layout deliberately leaves room without pre-building a slot).
+- Imminent / overdue deadline marker on the list row → **S-05** (FR-021).
+- Description excerpt on the list row → not planned for v1; description is optional and most v1 rows would render an empty block. Detail view (S-01) is the description surface.
+- Pagination / sort / filter / active-vs-completed splits → v2; FR-005 Socrates resolution locks v1 to a flat list.
+- Delete button on the detail view → v2 ergonomic enhancement; delete only lives on list rows for v1.
+- Soft-delete / archive semantics → v2 (FR-007 Socrates resolution).
+- Undo for delete → v2 (PRD §Guardrails accepts the native-confirm gesture as the second-gesture requirement).
+- Heavier delete-confirmation guard (typed-title modal) → v2 ergonomic enhancement.
+- JS island for any list-row interaction → not needed; the list is read-only + form-POST delete with a native confirm.
 
 ---
 

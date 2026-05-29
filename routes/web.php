@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\StepsController;
 use App\Http\Controllers\VenturesController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,13 +21,47 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('dashboard', [VenturesController::class, 'create'])->name('dashboard');
+    Route::get('dashboard', [VenturesController::class, 'index'])->name('dashboard');
 
     Route::get('ventures/create', [VenturesController::class, 'create'])->name('ventures.create');
+    Route::get('ventures', [VenturesController::class, 'index'])->name('ventures.index');
     Route::post('ventures', [VenturesController::class, 'store'])->name('ventures.store');
     Route::get('ventures/{venture}', [VenturesController::class, 'show'])
         ->whereNumber('venture')
         ->name('ventures.show');
+    Route::delete('ventures/{venture}', [VenturesController::class, 'destroy'])
+        ->whereNumber('venture')
+        ->name('ventures.destroy');
+
+    Route::get('ventures/{venture}/steps/create', [StepsController::class, 'create'])
+        ->whereNumber('venture')
+        ->name('steps.create');
+    Route::post('ventures/{venture}/steps', [StepsController::class, 'store'])
+        ->whereNumber('venture')
+        ->name('steps.store');
+    Route::get('ventures/{venture}/steps/{step}/edit', [StepsController::class, 'edit'])
+        ->whereNumber('venture')
+        ->whereNumber('step')
+        ->name('steps.edit');
+    Route::patch('ventures/{venture}/steps/{step}', [StepsController::class, 'update'])
+        ->whereNumber('venture')
+        ->whereNumber('step')
+        ->name('steps.update');
+    Route::delete('ventures/{venture}/steps/{step}', [StepsController::class, 'destroy'])
+        ->whereNumber('venture')
+        ->whereNumber('step')
+        ->name('steps.destroy');
+    Route::patch('ventures/{venture}/steps/{step}/completion', [StepsController::class, 'toggleCompletion'])
+        ->whereNumber('venture')
+        ->whereNumber('step')
+        ->name('steps.completion');
+
+    Route::post('ventures/{venture}/steps/suggestions', [StepsController::class, 'suggest'])
+        ->whereNumber('venture')
+        ->name('steps.suggestions.preview');
+    Route::post('ventures/{venture}/steps/suggestions/confirm', [StepsController::class, 'storeSuggestions'])
+        ->whereNumber('venture')
+        ->name('steps.suggestions.store');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
