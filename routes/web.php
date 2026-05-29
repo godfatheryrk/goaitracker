@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ExpensesController;
 use App\Http\Controllers\StepsController;
 use App\Http\Controllers\VenturesController;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +63,25 @@ Route::middleware('auth')->group(function () {
     Route::post('ventures/{venture}/steps/suggestions/confirm', [StepsController::class, 'storeSuggestions'])
         ->whereNumber('venture')
         ->name('steps.suggestions.store');
+
+    Route::get('ventures/{venture}/expenses/create', [ExpensesController::class, 'create'])
+        ->whereNumber('venture')
+        ->name('expenses.create');
+    Route::post('ventures/{venture}/expenses', [ExpensesController::class, 'store'])
+        ->whereNumber('venture')
+        ->name('expenses.store');
+    Route::get('ventures/{venture}/expenses/{expense}/edit', [ExpensesController::class, 'edit'])
+        ->whereNumber('venture')
+        ->whereNumber('expense')
+        ->name('expenses.edit');
+    Route::patch('ventures/{venture}/expenses/{expense}', [ExpensesController::class, 'update'])
+        ->whereNumber('venture')
+        ->whereNumber('expense')
+        ->name('expenses.update');
+    Route::delete('ventures/{venture}/expenses/{expense}', [ExpensesController::class, 'destroy'])
+        ->whereNumber('venture')
+        ->whereNumber('expense')
+        ->name('expenses.destroy');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');

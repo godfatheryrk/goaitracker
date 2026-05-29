@@ -41,9 +41,9 @@
                                             {{ $venture->title }}
                                         </a>
                                         {{-- Stacked metadata (shared row contract):
-                                             line 1 = step progress (S-04, below)
-                                             line 2 = Total: X.XX cost (S-06, reserved — leave intact if merged)
-                                             line 3 = deadline-pressure marker (S-05, below) --}}
+                                             line 1 = step progress (S-04)
+                                             line 2 = total cost (S-06)
+                                             line 3 = deadline-pressure marker (S-05) --}}
                                         <p class="mt-1 text-xs text-gray-500">
                                             @if ($venture->steps_count === 0)
                                                 —
@@ -51,7 +51,9 @@
                                                 {{ $venture->completed_steps_count }} of {{ $venture->steps_count }} steps completed
                                             @endif
                                         </p>
-                                        {{-- line 2 reserved for S-06's `Total: X.XX` cost slot --}}
+                                        <p class="mt-1 text-xs text-gray-500">
+                                            Total: {{ number_format($venture->total_cost ?? 0, 2) }}
+                                        </p>
                                         @if ($venture->pressured_steps_count > 0)
                                             <p class="mt-1 text-xs text-red-600 font-medium">⚠ Deadline pressure</p>
                                         @endif

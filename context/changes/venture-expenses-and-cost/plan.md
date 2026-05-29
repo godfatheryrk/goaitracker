@@ -604,46 +604,46 @@ Seven tests total. Breakdown: `AddExpenseTest` (2), `EditExpenseTest` (2), `Dele
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly: `php artisan migrate` (or `composer run test` via `RefreshDatabase`)
-- [ ] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 1.3 Existing test suite still green: `composer run test`
-- [ ] 1.4 `php artisan route:list --name=expenses` shows the five new `expenses.*` routes under the `auth` middleware
+- [x] 1.1 Migration applies cleanly: `php artisan migrate` (or `composer run test` via `RefreshDatabase`)
+- [x] 1.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 1.3 Existing test suite still green: `composer run test` (57 passed)
+- [x] 1.4 `php artisan route:list --name=expenses` shows the five new `expenses.*` routes under the `auth` middleware
 
 #### Manual
 
-- [ ] 1.5 Visiting `/ventures/{v}/expenses/create` while authenticated returns the placeholder 404 (skeleton stub fires)
-- [ ] 1.6 Visiting any of the five routes while unauthenticated redirects to `/login`
-- [ ] 1.7 `php artisan tinker` quick check: `\App\Models\Expense::factory()->create()` succeeds with `amount` as stringified `decimal:2` and `date` as Carbon
+- [x] 1.5 Visiting `/ventures/{v}/expenses/create` while authenticated returns the placeholder 404 (skeleton stub fires)
+- [x] 1.6 Visiting any of the five routes while unauthenticated redirects to `/login`
+- [x] 1.7 `php artisan tinker` quick check: `\App\Models\Expense::factory()->create()` succeeds with `amount` as stringified `decimal:2` and `date` as Carbon
 
 ### Phase 2: Wire actions + integrate views
 
 #### Automated
 
-- [ ] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 2.2 Existing test suite still green: `composer run test`
-- [ ] 2.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
+- [x] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 2.2 Existing test suite still green: `composer run test` (57 passed)
+- [x] 2.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
 
 #### Manual
 
-- [ ] 2.4 Add an expense from the empty-state CTA → lands in the ledger; detail-view total updates
-- [ ] 2.5 Edit an expense → values update; detail-view total recomputes
-- [ ] 2.6 Add a second expense with an earlier date → ledger orders by date DESC, created_at DESC
-- [ ] 2.7 Delete an expense → native confirm dialog → row gone; total recomputes
-- [ ] 2.8 Navigate to `/dashboard` → venture-list row shows two metadata lines (line 1 = progress, line 2 = total cost)
-- [ ] 2.9 After editing an expense, return to `/dashboard` → the venture has bubbled to the top (`Expense::$touches = ['venture']` wiring verified end-to-end)
-- [ ] 2.10 Create a venture with zero expenses → list row reads `Total: 0.00`; detail-view shows empty-state CTA
-- [ ] 2.11 The `ventures/index.blade.php` Blade comment names the line-1 / line-2 / line-3 slot contract for S-05 explicitly
+- [x] 2.4 Add an expense from the empty-state CTA → lands in the ledger; detail-view total updates
+- [x] 2.5 Edit an expense → values update; detail-view total recomputes
+- [x] 2.6 Add a second expense with an earlier date → ledger orders by date DESC, created_at DESC
+- [x] 2.7 Delete an expense → native confirm dialog → row gone; total recomputes
+- [x] 2.8 Navigate to `/dashboard` → venture-list row shows two metadata lines (line 1 = progress, line 2 = total cost)
+- [x] 2.9 After editing an expense, return to `/dashboard` → the venture has bubbled to the top (`Expense::$touches = ['venture']` wiring verified end-to-end)
+- [x] 2.10 Create a venture with zero expenses → list row reads `Total: 0.00`; detail-view shows empty-state CTA
+- [x] 2.11 The `ventures/index.blade.php` Blade comment names the line-1 / line-2 / line-3 slot contract for S-05 explicitly
 
 ### Phase 3: Test matrix + cross-slice handoff
 
 #### Automated
 
-- [ ] 3.1 All new feature tests pass: `composer run test`
-- [ ] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 3.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
+- [x] 3.1 All new feature tests pass: `composer run test`
+- [x] 3.2 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 3.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
 
 #### Manual
 
-- [ ] 3.4 `docs/reference/contract-surfaces.md` "Expense surface (S-06)" reads sensibly with working file:line references and the line-3 reservation for S-05 unambiguous
-- [ ] 3.5 `context/foundation/roadmap.md` S-06 row is `done` in the table, the slice block, and the Backlog Handoff column
-- [ ] 3.6 `context/changes/venture-expenses-and-cost/change.md` flipped to `status: implemented`, `updated` bumped to the implementation date
+- [x] 3.4 `docs/reference/contract-surfaces.md` "Expense surface (S-06)" reads sensibly with working file:line references and the line-3 reservation for S-05 unambiguous
+- [x] 3.5 `context/foundation/roadmap.md` S-06 row is `done` in the table, the slice block, and the Backlog Handoff column
+- [x] 3.6 `context/changes/venture-expenses-and-cost/change.md` flipped to `status: implemented`, `updated` bumped to the implementation date

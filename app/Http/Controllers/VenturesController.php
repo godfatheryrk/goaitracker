@@ -28,6 +28,7 @@ class VenturesController extends Controller
                     ->whereNotNull('deadline')
                     ->whereDate('deadline', '<=', today()->addDays(Step::IMMINENT_WINDOW_DAYS)),
             ])
+            ->withSum('expenses as total_cost', 'amount')
             ->orderByDesc('updated_at')
             ->get();
 
@@ -84,14 +85,16 @@ class VenturesController extends Controller
 
     public function show(Request $request, int $venture): View
     {
-        $model = $request->user()->ventures()->with('steps')->findOrFail($venture);
+        $model = $request->user()->ventures()->with(['steps', 'expenses'])->findOrFail($venture);
         $completed = $model->steps->where('is_completed', true)->count();
         $total = $model->steps->count();
+        $totalCost = $model->expenses()->sum('amount');
 
         return view('ventures.show', [
             'venture' => $model,
             'completed' => $completed,
             'total' => $total,
+            'totalCost' => $totalCost,
         ]);
     }
 
