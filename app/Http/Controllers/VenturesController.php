@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\StepSource;
 use App\Http\Requests\Ventures\CreateVentureRequest;
+use App\Models\Step;
 use App\Services\AiStepSuggester;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,12 @@ class VenturesController extends Controller
             ->withCount([
                 'steps',
                 'steps as completed_steps_count' => fn ($q) => $q->where('is_completed', true),
+                // FR-021: incomplete + deadlined + imminent-or-overdue (deadline <= today+window,
+                // which includes past). Single-source window via Step::IMMINENT_WINDOW_DAYS.
+                'steps as pressured_steps_count' => fn ($q) => $q
+                    ->where('is_completed', false)
+                    ->whereNotNull('deadline')
+                    ->whereDate('deadline', '<=', today()->addDays(Step::IMMINENT_WINDOW_DAYS)),
             ])
             ->orderByDesc('updated_at')
             ->get();
