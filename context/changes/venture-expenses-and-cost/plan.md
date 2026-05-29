@@ -619,20 +619,20 @@ Seven tests total. Breakdown: `AddExpenseTest` (2), `EditExpenseTest` (2), `Dele
 
 #### Automated
 
-- [ ] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
-- [ ] 2.2 Existing test suite still green: `composer run test`
-- [ ] 2.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
+- [x] 2.1 Linting / formatting passes: `vendor/bin/pint --test`
+- [x] 2.2 Existing test suite still green: `composer run test` (57 passed)
+- [x] 2.3 `php artisan route:list --name=expenses` still shows the five `expenses.*` routes
 
 #### Manual
 
-- [ ] 2.4 Add an expense from the empty-state CTA → lands in the ledger; detail-view total updates
-- [ ] 2.5 Edit an expense → values update; detail-view total recomputes
-- [ ] 2.6 Add a second expense with an earlier date → ledger orders by date DESC, created_at DESC
-- [ ] 2.7 Delete an expense → native confirm dialog → row gone; total recomputes
-- [ ] 2.8 Navigate to `/dashboard` → venture-list row shows two metadata lines (line 1 = progress, line 2 = total cost)
-- [ ] 2.9 After editing an expense, return to `/dashboard` → the venture has bubbled to the top (`Expense::$touches = ['venture']` wiring verified end-to-end)
-- [ ] 2.10 Create a venture with zero expenses → list row reads `Total: 0.00`; detail-view shows empty-state CTA
-- [ ] 2.11 The `ventures/index.blade.php` Blade comment names the line-1 / line-2 / line-3 slot contract for S-05 explicitly
+- [x] 2.4 Add an expense from the empty-state CTA → lands in the ledger; detail-view total updates
+- [x] 2.5 Edit an expense → values update; detail-view total recomputes
+- [x] 2.6 Add a second expense with an earlier date → ledger orders by date DESC, created_at DESC
+- [x] 2.7 Delete an expense → native confirm dialog → row gone; total recomputes
+- [x] 2.8 Navigate to `/dashboard` → venture-list row shows two metadata lines (line 1 = progress, line 2 = total cost)
+- [x] 2.9 After editing an expense, return to `/dashboard` → the venture has bubbled to the top (`Expense::$touches = ['venture']` wiring verified end-to-end)
+- [x] 2.10 Create a venture with zero expenses → list row reads `Total: 0.00`; detail-view shows empty-state CTA
+- [x] 2.11 The `ventures/index.blade.php` Blade comment names the line-1 / line-2 / line-3 slot contract for S-05 explicitly
 
 ### Phase 3: Test matrix + cross-slice handoff
 

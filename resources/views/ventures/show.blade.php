@@ -110,6 +110,52 @@
                     @endif
                 </div>
             </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="font-medium text-sm text-gray-500 uppercase tracking-wide">Expenses</h3>
+                        <p class="text-sm text-gray-600">Total: {{ number_format($totalCost ?? 0, 2) }}</p>
+                    </div>
+
+                    @if ($venture->expenses->isEmpty())
+                        <div class="mt-4 space-y-3">
+                            <p class="text-sm text-gray-600">No expenses yet.</p>
+                            <a href="{{ route('expenses.create', $venture) }}"
+                               class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent
+                                      rounded-md font-semibold text-xs text-white uppercase tracking-widest
+                                      hover:bg-gray-700">
+                                + Add expense
+                            </a>
+                        </div>
+                    @else
+                        <ul class="mt-3 divide-y divide-gray-100">
+                            @foreach ($venture->expenses as $expense)
+                                <li class="py-2 flex items-start justify-between gap-4">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm text-gray-800">{{ $expense->description }}</p>
+                                        <p class="text-xs text-gray-500">{{ $expense->date->toDateString() }} · {{ $expense->amount }}</p>
+                                    </div>
+                                    <a href="{{ route('expenses.edit', [$venture, $expense]) }}"
+                                       class="text-xs text-gray-600 hover:text-gray-900">Edit</a>
+                                    <form method="POST"
+                                          action="{{ route('expenses.destroy', [$venture, $expense]) }}"
+                                          onsubmit="return confirm('Delete this expense?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-xs text-red-600 hover:text-red-800">Delete</button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        </ul>
+
+                        <div class="mt-4">
+                            <a href="{{ route('expenses.create', $venture) }}"
+                               class="text-sm text-gray-700 hover:text-gray-900">+ Add expense</a>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 @endsection
