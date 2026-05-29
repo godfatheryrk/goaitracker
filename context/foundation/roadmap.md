@@ -43,7 +43,7 @@ entire product thesis fails; everything else only matters once this works.
 | S-01  | create-venture-with-ai-plan        | create a venture and see exactly 7 AI-suggested steps                   | F-01, F-02    | US-01, FR-004, FR-008, FR-006                         | done     |
 | S-02  | edit-and-track-steps               | add / edit / delete / complete steps and see progress                   | S-01          | FR-010, FR-011, FR-012, FR-013, FR-018, NFR(edit-latency) | done     |
 | S-03  | extend-plan-with-ai                | trigger AI to append more steps (append-only, off-metric)               | S-01, F-02    | FR-009                                                | done     |
-| S-04  | list-and-delete-ventures           | view a list of own ventures, open or delete one                         | S-01          | FR-005, FR-006, FR-007                                | proposed |
+| S-04  | list-and-delete-ventures           | view a list of own ventures, open or delete one                         | S-01          | FR-005, FR-006, FR-007                                | done     |
 | S-05  | step-deadlines-and-pressure-signals | set optional step deadlines; see imminent/overdue badges + list marker  | S-02, S-04    | FR-014, FR-020, FR-021                                | proposed |
 | S-06  | venture-expenses-and-cost          | add / edit / delete expenses; see total cost on detail + list           | S-01, S-04    | FR-015, FR-016, FR-017, FR-019                        | proposed |
 
@@ -181,7 +181,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-01       | create-venture-with-ai-plan        | Create venture → 7 AI-suggested steps                    | done                  | Needs F-01, F-02 (north star)          |
 | S-02       | edit-and-track-steps               | Edit / add / delete / complete steps + progress          | done                  | Needs S-01                             |
 | S-03       | extend-plan-with-ai                | Extend step plan via AI (append-only)                    | done                  | Needs S-01, F-02                       |
-| S-04       | list-and-delete-ventures           | Venture list + delete venture                            | no                    | Needs S-01                             |
+| S-04       | list-and-delete-ventures           | Venture list + delete venture                            | done                  | Needs S-01                             |
 | S-05       | step-deadlines-and-pressure-signals | Step deadlines + imminent/overdue badges & list marker   | no                    | Needs S-02, S-04                       |
 | S-06       | venture-expenses-and-cost          | Venture expenses + total cost on detail & list           | no                    | Needs S-01, S-04                       |
 

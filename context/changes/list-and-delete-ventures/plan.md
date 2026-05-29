@@ -274,9 +274,9 @@ None. No schema change, no data migration. The `Step::$touches = ['venture']` ch
 
 #### Automated
 
-- [x] 1.1 Existing test suite stays green: `composer run test` exits 0 with the prior 7 Ventures + 17 Steps tests still passing
-- [x] 1.2 `php artisan route:list --name=ventures` shows `ventures.index`, `ventures.show`, `ventures.store`, `ventures.create`, `ventures.destroy` (and the `dashboard` row now points at `App\Http\Controllers\VenturesController@index`)
-- [x] 1.3 `vendor/bin/pint` reports no formatting drift
+- [x] 1.1 Existing test suite stays green: `composer run test` exits 0 with the prior 7 Ventures + 17 Steps tests still passing — f177546
+- [x] 1.2 `php artisan route:list --name=ventures` shows `ventures.index`, `ventures.show`, `ventures.store`, `ventures.create`, `ventures.destroy` (and the `dashboard` row now points at `App\Http\Controllers\VenturesController@index`) — f177546
+- [x] 1.3 `vendor/bin/pint` reports no formatting drift — f177546
 
 #### Manual
 
@@ -290,10 +290,10 @@ None. No schema change, no data migration. The `Step::$touches = ['venture']` ch
 
 #### Automated
 
-- [ ] 2.1 Full test suite passes: `composer run test` → 0 failures, 0 errors; Ventures suite now totals 12 tests (was 7)
-- [ ] 2.2 `composer run test -- --filter=ListVenturesTest` runs the 3 list tests and passes
-- [ ] 2.3 `composer run test -- --filter=DeleteVentureTest` runs the 2 delete tests and passes
-- [ ] 2.4 `vendor/bin/pint` reports no formatting drift on the new test files
+- [x] 2.1 Full test suite passes: `composer run test` → 0 failures, 0 errors; Ventures suite now totals 12 tests (was 7)
+- [x] 2.2 `composer run test -- --filter=ListVenturesTest` runs the 3 list tests and passes
+- [x] 2.3 `composer run test -- --filter=DeleteVentureTest` runs the 2 delete tests and passes
+- [x] 2.4 `vendor/bin/pint` reports no formatting drift on the new test files
 
 #### Manual
 

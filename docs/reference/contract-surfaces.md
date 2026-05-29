@@ -45,7 +45,7 @@ If any item is missing when S-01 reaches `/10x-plan-review`, the reviewer MUST b
 
 **Established by**: F-01.
 
-- **Routes**: `register` (GET/POST), `login` (GET/POST), `logout` (POST), `dashboard` (GET). Named exactly. The `login` route name is referenced by the `auth` middleware redirect, the `LoginRequest` throttle response, and downstream slice tests — do not rename without a coordinated update.
+- **Routes**: `register` (GET/POST), `login` (GET/POST), `logout` (POST), `dashboard` (GET). Named exactly. The `login` route name is referenced by the `auth` middleware redirect, the `LoginRequest` throttle response, and downstream slice tests — do not rename without a coordinated update. The `dashboard` route name is the canonical post-login landing target referenced by `RegisteredUserController::store` and `LoginRequest` via `redirect()->intended(route('dashboard'))`; S-04 reassigned its underlying action from the create form to the venture list (`VenturesController@index`) while preserving the route name and the `/dashboard` URL.
 - **Login throttle**: 5 failed attempts per `Str::lower(email)|ip` key, 60s decay; success clears the limiter. Mirrors Laravel Breeze's `LoginRequest` contract.
 - **Session security**: regenerate on login, invalidate + regenerate token on logout.
 - **Derived `name`**: registration derives `users.name` from the email local-part (portion before `@`). The `users.name` column remains NOT NULL; no UI collects it.
@@ -111,8 +111,8 @@ Swapping providers is an env-only change. Note: the provider must support plain 
 
 ### Routes (all under the `auth` middleware)
 
-- `dashboard` (GET) — post-login landing surface. Currently aliased to `ventures.create` so existing `route('dashboard')` callers (`RegisteredUserController::store`, `LoginRequest`) keep working without an edit. When S-04 lands and the dashboard concept becomes the venture list, the `dashboard` route name reassigns; `ventures.create` stays.
-- `ventures.create` (GET `/ventures/create`) — canonical name for the create form. Same handler as `dashboard`.
+- `dashboard` (GET) — post-login landing surface. **S-04 has reassigned the `dashboard` route name to `VenturesController@index` (the venture list)**; the `/dashboard` URL persists for the F-01 intended-redirect contract (`RegisteredUserController::store`, `LoginRequest`), and the route name keeps working for nav links without a per-callsite edit. See [Venture list + destroy surface (S-04)](#venture-list--destroy-surface-s-04) for the new landing behaviour.
+- `ventures.create` (GET `/ventures/create`) — canonical name for the create form. Reached from the venture list's "+ New venture" / empty-state CTA; no longer aliased to `dashboard`.
 - `ventures.store` (POST `/ventures`) — validates `CreateVentureRequest`, calls `AiStepSuggester::suggestSteps()` OUTSIDE a DB transaction (so a failed venture-insert cannot roll back the counter increment for an AI attempt that really happened), then persists `Venture` + 0-or-7 `Step` rows inside a transaction, then redirects to `ventures.show`.
 - `ventures.show` (GET `/ventures/{venture}`, `whereNumber('venture')`) — read-only render of title, description, and step list in `position` order. AI-unavailable flash notice renders above the step list when `session('ai_unavailable')` is set.
 
@@ -143,7 +143,7 @@ The column itself is string-typed (not a native DB enum) for SQLite/Postgres por
 
 - Step edit / delete / completion toggle / manual add → **S-02**.
 - AI extension trigger (`FR-009`) → **S-03**.
-- Venture list / venture delete UI → **S-04**.
+- Venture list / venture delete UI → **S-04** — see [Venture list + destroy surface (S-04)](#venture-list--destroy-surface-s-04).
 - Deadlines on steps + the 3-day badge / list-level marker → **S-05**.
 - Expenses → **S-06**.
 
@@ -263,6 +263,59 @@ The suggest endpoint reuses S-01's amber `ai_unavailable` flash key with extensi
 - Inline body editing on the preview → v2; the user keeps a row then edits it via S-02's step Edit link.
 - Counter-status surface ("N AI calls left today") → v2.
 - Soft-cap warning at high step counts → v2 (PRD §Open Questions / FR-009 Socrates resolution).
+
+---
+
+## Venture list + destroy surface (S-04)
+
+**Established by**: S-04 (`context/changes/list-and-delete-ventures/`).
+
+**PRD anchors**: FR-005 (user can view a list of all their own ventures), FR-006 (single-venture detail view — reached from the list via each row's title link), FR-007 (user can delete a venture, with confirmation), NFR(isolation).
+
+### Routes (all under the `auth` middleware)
+
+- `ventures.index` (GET `/ventures`) — canonical RESTful name for the list.
+- `dashboard` (GET `/dashboard`) — **reassigned by S-04** from the create form to `VenturesController@index` (the same action as `ventures.index`). Two URLs (`/dashboard`, `/ventures`) share one action under two route names — mirrors the S-01 dashboard / `ventures.create` aliasing pattern. The route name `dashboard` is preserved so `route('dashboard')` callers in F-01 (`RegisteredUserController::store`, `LoginRequest::authenticate` → `redirect()->intended(route('dashboard'))`) and the nav home link continue to work without per-callsite edits. Tests written against the list use `route('ventures.index')`.
+- `ventures.destroy` (DELETE `/ventures/{venture}`, `whereNumber('venture')`) — delete one venture and (via the schema cascade) its step subtree.
+
+### Access path rule (realization of the F-01 contract)
+
+Both new actions resolve the venture through `$request->user()->ventures()` — the same singly-scoped relationship chain S-01 established. `index` calls `$request->user()->ventures()->withCount([...])->orderByDesc('updated_at')->get()`. `destroy` calls `$request->user()->ventures()->findOrFail($venture)->delete()`. This produces **404 (not 403)** for a foreign user POSTing a DELETE to a venture they don't own — the relationship-scoped query simply finds no row. No global `Venture::find($venture)->delete()`, no `Route::bind('venture', …)`, no global scope on the model.
+
+### Cascade semantics (schema-level, not application-level)
+
+`$venture->delete()` issues one `DELETE FROM ventures WHERE id = ?` statement; Postgres / SQLite cascade `steps.venture_id ON DELETE CASCADE` and remove the step subtree as part of the same transaction. **No application-level loop is needed** (and writing one would be wrong — model events on `Step` fire per row, and a partial-delete failure would leave the DB inconsistent). The `ai_call_counters` table is keyed on `owner_id` (NOT `venture_id`), so deleting a venture does NOT roll back any per-user 24h counter — the AI calls really happened, and the counter accounting must reflect that regardless of whether the venture they fed survives. No refund logic.
+
+### Sort: `ORDER BY updated_at DESC` (+ the `Step::$touches` coupling)
+
+The list orders by `updated_at DESC` so the venture the user last touched bubbles to the top — the shape that rewards the secondary success metric ("users return to a venture at least once") and the "+ X of Y completed" progress signal. Critically, **`Step::$touches = ['venture']`** is the wiring that makes this sort honest: without it, editing a step (S-02's edit / delete / toggle / create paths, S-03's AI-extension confirm path) would NOT bump the parent venture's `updated_at`, and a venture whose only recent activity is step edits would stay buried under a never-touched venture created later. The one-line `protected $touches = ['venture'];` on `Step` causes every step save/delete to issue `$venture->touch()` as part of the same transaction; downstream slices that add new step writers (S-05's deadline editor, S-06 if/when expenses move per-step) MUST not bypass `save()` / `delete()` (e.g., raw `DB::table('steps')->...`) without re-touching the parent. **If you remove `$touches`, the list sort lies silently — there is no surface that screams about it.**
+
+### Per-row aggregates (FR-018 mirror on the list)
+
+`withCount(['steps', 'steps as completed_steps_count' => fn ($q) => $q->where('is_completed', true)])` adds two subqueries per index render — `$venture->steps_count` (total) and `$venture->completed_steps_count` (filtered) — so each row renders `"X of Y steps completed"` (or `"—"` when `steps_count === 0`) without N+1. Laravel's named-subquery aggregate shape is the idiomatic way to combine filtered + unfiltered counts. The same `$completed / $total` signal already lives on the detail view (S-01 / S-02); the list mirrors it.
+
+### Confirmation gesture (NFR realization for FR-007)
+
+Delete is an inline `<form method="POST" onsubmit="return confirm('Delete this venture? This will also remove all its steps.')">` with `@csrf + @method('DELETE')` — the same native-`confirm()` pattern S-02's step-delete row uses. The blast radius is larger (a venture carries its step subtree, and S-05/S-06 will add deadlines + expenses), but the v1 confirm shape is uniform across both delete points. A heavier guard ("type the title", typed-confirm modal) is a v2 ergonomic enhancement noted in the §Out of scope sub-section below.
+
+### Test proof
+
+- `tests/Feature/Ventures/ListVenturesTest.php` — 3 tests: empty-state renders the "Create your first venture" CTA and the `route('ventures.create')` href is wired (FR-005 empty-state surface); user A sees their own ventures and does NOT see user B's title (FR-005 + F-01 isolation enforcement on the index endpoint); a step save advances the parent venture's `updated_at` (locks the `Step::$touches = ['venture']` wiring — the silent-lie failure mode named above is what this assertion catches).
+- `tests/Feature/Ventures/DeleteVentureTest.php` — 2 tests: owner can delete their own venture (target row gone, target step rows gone via cascade, sibling venture and its step rows survive — the sibling assertion locks cascade scope to `venture_id`, not over-cascading on `owner_id`); user B gets 404 (not 403) on user A's destroy URL and user A's venture is still in the DB (F-01 enforcement-checklist item 4 on the destroy endpoint).
+
+The guest-302-on-destroy assertion the F-01 enforcement checklist names is NOT separately ship-tested in this slice — the `auth` middleware boundary is structurally identical to the boundary already proven for `ventures.show` in `tests/Feature/Ventures/VentureIsolationTest::test_guest_gets_redirect_on_venture_show`. Documented here so a future reviewer doesn't read this as an oversight.
+
+### Out of scope for S-04 (deferred / explicitly not done)
+
+- Total-cost cell on the list row → **S-06** (FR-019 surfaces cost on both detail and list; the list layout deliberately leaves room without pre-building a slot).
+- Imminent / overdue deadline marker on the list row → **S-05** (FR-021).
+- Description excerpt on the list row → not planned for v1; description is optional and most v1 rows would render an empty block. Detail view (S-01) is the description surface.
+- Pagination / sort / filter / active-vs-completed splits → v2; FR-005 Socrates resolution locks v1 to a flat list.
+- Delete button on the detail view → v2 ergonomic enhancement; delete only lives on list rows for v1.
+- Soft-delete / archive semantics → v2 (FR-007 Socrates resolution).
+- Undo for delete → v2 (PRD §Guardrails accepts the native-confirm gesture as the second-gesture requirement).
+- Heavier delete-confirmation guard (typed-title modal) → v2 ergonomic enhancement.
+- JS island for any list-row interaction → not needed; the list is read-only + form-POST delete with a native confirm.
 
 ---
 
