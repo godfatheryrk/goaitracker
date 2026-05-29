@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StepSource;
 use App\Http\Requests\Ventures\CreateVentureRequest;
-use App\Models\Step;
 use App\Services\AiStepSuggester;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,23 +32,22 @@ class VenturesController extends Controller
     {
         $user = $request->user();
         $title = $request->string('title')->toString();
-        $description = $request->string('description')->toString();
+        $description = $request->input('description');
 
-        $steps = $this->suggester->suggestSteps($user, $title, $description);
+        $steps = $this->suggester->suggestSteps($user, $title, $description ?? '');
 
         $venture = DB::transaction(function () use ($user, $title, $description, $steps) {
             $venture = $user->ventures()->create([
                 'title' => $title,
-                'description' => $description !== '' ? $description : null,
+                'description' => $description,
             ]);
 
             foreach ($steps as $i => $body) {
-                $venture->steps()->create([
-                    'owner_id' => $user->id,
+                $venture->steps()->make([
                     'body' => $body,
-                    'source' => Step::SOURCE_AI_INITIAL,
+                    'source' => StepSource::AiInitial,
                     'position' => $i,
-                ]);
+                ])->forceFill(['owner_id' => $user->id])->save();
             }
 
             return $venture;

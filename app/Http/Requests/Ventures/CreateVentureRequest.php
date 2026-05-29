@@ -12,6 +12,18 @@ class CreateVentureRequest extends FormRequest
     }
 
     /**
+     * Normalize description so empty string becomes null — the show view
+     * renders `{{ $venture->description ?? '—' }}`, so an empty string
+     * would render as an empty paragraph instead of the em-dash fallback.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('description') === '') {
+            $this->merge(['description' => null]);
+        }
+    }
+
+    /**
      * @return array<string, array<int, string>>
      */
     public function rules(): array

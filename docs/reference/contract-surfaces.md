@@ -74,6 +74,10 @@ Resolve via the container (singleton-bound in `AppServiceProvider`). Callers do 
 - **Any failure**: empty array `[]`. Failure modes include: network timeout, HTTP 4xx/5xx from the provider, malformed/non-JSON response, wrong step count, over-quota, and any other `\Throwable`. The empty-array contract is unconditional — provider exceptions never cross this seam.
 - Callers MUST treat `[]` as "AI unavailable, proceed manually." They MUST NOT surface the failure as an error to the end user (NFR(ai-graceful)).
 
+### Length cap coupling
+
+The 200-character upper bound is enforced inside `AiStepSuggester` via `config('ai.step_suggestion.max_step_length')` (default 200). The S-01 `steps.body` column is `string('body', 200)` to match. **If `max_step_length` changes, the `steps.body` column MUST move in lockstep** — Postgres would otherwise throw on insert AFTER the counter increment, breaking the NFR(ai-graceful) "`[]` = unavailable" contract (the AI call succeeded but persistence threw, which is not a failure mode the service or its callers handle).
+
 ### Rate-limit counter table
 
 Table: `ai_call_counters(id, owner_id, day, count, created_at, updated_at)`
@@ -118,13 +122,13 @@ Every authenticated controller action on the venture surface MUST reach the mode
 
 ### Step `source` enum (FR-008 primary-metric AI pool snapshot)
 
-The `steps.source` column is a string with three valid values, declared as class constants on `App\Models\Step`:
+The `steps.source` column is a string with three valid values, declared as a backed PHP enum `App\Enums\StepSource` and cast on the `Step` model via `protected $casts = ['source' => StepSource::class]`. Writes use the enum case (typed at the call site); reads return the enum instance:
 
-- `Step::SOURCE_AI_INITIAL` (`'ai_initial'`) — written by `VenturesController::store` for each of the 7 steps that `AiStepSuggester::suggestSteps()` returned at venture creation. **This is the frozen denominator for the PRD primary metric** ("≥3 of 7 AI-initial steps kept, verbatim or edited"). S-02's edit / delete must preserve this value across edits; S-04's venture delete cascades the rows so the snapshot disappears with its parent.
-- `Step::SOURCE_AI_EXTENSION` (`'ai_extension'`) — reserved for S-03 (AI-extend-on-demand). No code path in S-01 writes this value. Steps added via the FR-009 extension trigger carry this source and are excluded from the FR-008 metric.
-- `Step::SOURCE_MANUAL` (`'manual'`) — reserved for S-02 (manual add-step). No code path in S-01 writes this value. Excluded from the FR-008 metric.
+- `StepSource::AiInitial` (`'ai_initial'`) — written by `VenturesController::store` for each of the 7 steps that `AiStepSuggester::suggestSteps()` returned at venture creation. **This is the frozen denominator for the PRD primary metric** ("≥3 of 7 AI-initial steps kept, verbatim or edited"). S-02's edit / delete must preserve this value across edits; S-04's venture delete cascades the rows so the snapshot disappears with its parent.
+- `StepSource::AiExtension` (`'ai_extension'`) — reserved for S-03 (AI-extend-on-demand). No code path in S-01 writes this value. Steps added via the FR-009 extension trigger carry this source and are excluded from the FR-008 metric.
+- `StepSource::Manual` (`'manual'`) — reserved for S-02 (manual add-step). No code path in S-01 writes this value. Excluded from the FR-008 metric.
 
-The values are string-typed (not native DB enum) for SQLite/Postgres portability; the model constants are the source of truth for valid values.
+The column itself is string-typed (not a native DB enum) for SQLite/Postgres portability; the `StepSource` backed enum + the model cast are the source of truth for valid values, so any caller passing an unknown string fails the type system at the seam.
 
 ### AI failure contract (NFR(ai-graceful) realization)
 

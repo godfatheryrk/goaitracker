@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Ventures;
 
+use App\Enums\StepSource;
 use App\Models\Step;
 use App\Models\User;
 use App\Models\Venture;
 use App\Services\AiStepSuggester;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 use Tests\TestCase;
 
 class CreateVentureTest extends TestCase
@@ -21,12 +23,18 @@ class CreateVentureTest extends TestCase
     public function test_creating_a_venture_persists_seven_ai_initial_steps_on_success(): void
     {
         $expected = $this->sevenSteps();
-
-        $this->mock(AiStepSuggester::class, function ($mock) use ($expected) {
-            $mock->shouldReceive('suggestSteps')->once()->andReturn($expected);
-        });
-
         $user = User::factory()->create();
+
+        $this->mock(AiStepSuggester::class, function ($mock) use ($expected, $user) {
+            $mock->shouldReceive('suggestSteps')
+                ->once()
+                ->with(
+                    Mockery::on(fn ($u) => $u->id === $user->id),
+                    'Learn welding',
+                    'MIG and TIG basics'
+                )
+                ->andReturn($expected);
+        });
 
         $response = $this->actingAs($user)->post('/ventures', [
             'title' => 'Learn welding',
@@ -45,7 +53,7 @@ class CreateVentureTest extends TestCase
         foreach ($venture->steps as $i => $step) {
             $this->assertSame($expected[$i], $step->body);
             $this->assertSame($i, $step->position);
-            $this->assertSame(Step::SOURCE_AI_INITIAL, $step->source);
+            $this->assertSame(StepSource::AiInitial, $step->source);
             $this->assertSame($user->id, $step->owner_id);
             $this->assertFalse($step->is_completed);
         }

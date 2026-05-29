@@ -2,21 +2,20 @@
 
 namespace App\Models;
 
+use App\Enums\StepSource;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['owner_id', 'body', 'is_completed', 'source', 'position'])]
+#[Fillable(['body', 'source', 'position'])]
 class Step extends Model
 {
-    public const SOURCE_AI_INITIAL = 'ai_initial';
-
-    public const SOURCE_AI_EXTENSION = 'ai_extension';
-
-    public const SOURCE_MANUAL = 'manual';
+    use HasFactory;
 
     protected $casts = [
         'is_completed' => 'boolean',
+        'source' => StepSource::class,
     ];
 
     public function venture(): BelongsTo
