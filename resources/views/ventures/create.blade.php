@@ -21,7 +21,7 @@
                     <div>
                         <x-ui.input label="Description" name="description" type="textarea"
                                     :value="old('description')" rows="4" maxlength="2000" />
-                        <p class="mt-1 text-xs text-base-content/60">
+                        <p class="mt-1 text-sm text-base-content/60">
                             Richer descriptions yield better step suggestions.
                         </p>
                     </div>

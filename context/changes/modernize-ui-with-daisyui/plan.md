@@ -164,7 +164,7 @@ and consistent. Each uses `@props` for variants and `$attributes->merge([...])` 
 `type`, `href`, `name`, `id`, etc.
 
 **Contract**:
-- `ui.button` — props: `variant` (`primary`|`ghost`|`error`, default `primary`), `type` (default `submit`);
+- `ui.button` — props: `variant` (`primary`|`ghost`|`error`|`neutral`, default `primary`), `type` (default `submit`);
   renders `<button class="btn btn-{variant}">` or an `<a class="btn …">` when `href` is passed. Replaces the
   repeated `inline-flex … bg-gray-800 …` block and the text-link buttons (`+ Add step`, `Suggest more`, etc.
   use `variant=ghost` → `btn btn-ghost btn-sm`).
