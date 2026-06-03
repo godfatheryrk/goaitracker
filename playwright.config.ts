@@ -53,6 +53,9 @@ export default defineConfig({
         url: 'http://127.0.0.1:8001',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
+        // Surface artisan errors (e.g. a 500 on the readiness probe) in CI logs
+        // instead of an opaque "Timed out waiting from config.webServer".
+        stderr: 'pipe',
         env: {
             E2E_FAKE_AI: '1',
             APP_ENV: 'local',

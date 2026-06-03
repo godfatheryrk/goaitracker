@@ -40,6 +40,20 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Prepare E2E database
+        # Playwright starts webServer BEFORE globalSetup, and with
+        # SESSION_DRIVER=database the `/` readiness probe 500s on an unmigrated
+        # DB — so the server never reports ready and webServer times out.
+        # Pre-migrate here so the probe succeeds; globalSetup then re-runs
+        # migrate:fresh for a clean per-suite slate.
+        run: |
+          touch database/e2e.sqlite
+          php artisan migrate:fresh --seed --force
+        env:
+          APP_ENV: local
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ${{ github.workspace }}/database/e2e.sqlite
+
       - name: Run E2E tests
         run: npm run test:e2e
 
