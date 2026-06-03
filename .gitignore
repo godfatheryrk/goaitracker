@@ -13,10 +13,16 @@
 /.idea
 /.nova
 /.phpunit.cache
+/database/e2e.sqlite
 /.vscode
 /.zed
 /auth.json
+/.playwright-cli/
 /node_modules
+/playwright/.auth/
+/playwright/.cache/
+/playwright-report/
+/test-results/
 /public/build
 /public/fonts-manifest.dev.json
 /public/hot
