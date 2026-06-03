@@ -2,7 +2,7 @@
 change_id: modernize-ui-with-daisyui
 roadmap_id: S-07
 title: Modernize the UI with daisyUI across all surfaces
-status: implementing
+status: implemented
 created: 2026-06-03
 updated: 2026-06-03
 prd_refs: []

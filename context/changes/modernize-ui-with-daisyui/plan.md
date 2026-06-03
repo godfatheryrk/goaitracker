@@ -486,11 +486,11 @@ touching component call sites.
 
 #### Automated
 
-- [x] 3.1 composer run test green incl. SuggestExtensionTest field-name assertions + step/expense tests
-- [x] 3.2 npm run build compiles
+- [x] 3.1 composer run test green incl. SuggestExtensionTest field-name assertions + step/expense tests — 898d32e
+- [x] 3.2 npm run build compiles — 898d32e
 
 #### Manual
 
-- [x] 3.3 All six forms render/submit in both themes; validation errors display via ui.input/ui.alert
-- [x] 3.4 AI-suggestion preview keep/uncheck persists chosen rows; cancel returns to venture
-- [x] 3.5 No white-on-dark artifacts; visual consistency across all 14 views
+- [x] 3.3 All six forms render/submit in both themes; validation errors display via ui.input/ui.alert — 898d32e
+- [x] 3.4 AI-suggestion preview keep/uncheck persists chosen rows; cancel returns to venture — 898d32e
+- [x] 3.5 No white-on-dark artifacts; visual consistency across all 14 views — 898d32e
