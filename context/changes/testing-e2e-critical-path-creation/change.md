@@ -1,7 +1,7 @@
 ---
 change_id: testing-e2e-critical-path-creation
 title: E2E foundation and critical-path venture-creation tests
-status: implemented
+status: impl_reviewed
 created: 2026-06-03
 updated: 2026-06-03
 archived_at: null
