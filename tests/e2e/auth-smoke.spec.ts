@@ -8,5 +8,6 @@ import { test, expect } from '@playwright/test';
  */
 test('authenticated session reaches the dashboard', async ({ page }) => {
     await page.goto('/dashboard');
-    await expect(page).toHaveURL(/.*dashboard/);
+    // DELIBERATELY BROKEN to verify CI gating blocks merge into main — revert after confirming.
+    await expect(page).toHaveURL(/.*this-page-does-not-exist-ci-red-check/);
 });
