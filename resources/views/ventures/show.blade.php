@@ -8,176 +8,166 @@
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
             @if (session('ai_unavailable'))
-                <div class="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <x-ui.alert variant="warning">
                     {{ session('ai_unavailable') }}
-                </div>
+                </x-ui.alert>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="font-medium text-sm text-gray-500 uppercase tracking-wide">Description</h3>
-                    <p class="mt-2 whitespace-pre-line text-gray-800">
-                        {{ $venture->description ?? '—' }}
+            <x-ui.card>
+                <h3 class="font-medium text-sm text-base-content/60 uppercase tracking-wide">Description</h3>
+                <p class="mt-2 whitespace-pre-line text-base-content/80">
+                    {{ $venture->description ?? '—' }}
+                </p>
+            </x-ui.card>
+
+            <x-ui.card>
+                <div class="flex items-baseline justify-between border-b border-base-300 pb-3">
+                    <h3 class="font-medium text-sm text-base-content/60 uppercase tracking-wide">Steps</h3>
+                    <p class="grow-0 shrink-0 text-sm text-base-content/70" data-progress-text>
+                        {{ $completed }} of {{ $total }} completed
                     </p>
                 </div>
-            </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="flex items-baseline justify-between">
-                        <h3 class="font-medium text-sm text-gray-500 uppercase tracking-wide">Steps</h3>
-                        <p class="text-sm text-gray-600" data-progress-text>
-                            {{ $completed }} of {{ $total }} completed
-                        </p>
-                    </div>
-
-                    @if ($venture->steps->isEmpty())
-                        <div class="mt-4 space-y-3">
-                            <p class="text-sm text-gray-600">No steps yet.</p>
-                            <div class="flex items-center gap-4">
-                                <a href="{{ route('steps.create', $venture) }}"
-                                   class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent
-                                          rounded-md font-semibold text-xs text-white uppercase tracking-widest
-                                          hover:bg-gray-700">
-                                    + Add your first step
-                                </a>
-                                <form method="POST" action="{{ route('steps.suggestions.preview', $venture) }}" class="inline-block">
-                                    @csrf
-                                    <button type="submit" class="text-sm text-gray-700 hover:text-gray-900">
-                                        Suggest more with AI
-                                    </button>
-                                </form>
-                            </div>
+                @if ($venture->steps->isEmpty())
+                    <div class="mt-4 space-y-3">
+                        <p class="text-sm text-base-content/70">No steps yet.</p>
+                        <div class="flex items-center gap-4">
+                            <x-ui.button :href="route('steps.create', $venture)" class="btn-sm">
+                                + Add your first step
+                            </x-ui.button>
+                            <form method="POST" action="{{ route('steps.suggestions.preview', $venture) }}" class="inline-block">
+                                @csrf
+                                <x-ui.button type="submit" variant="primary" class="btn-outline btn-sm">
+                                    Suggest more with AI
+                                </x-ui.button>
+                            </form>
                         </div>
-                    @else
-                        <ol class="mt-3 space-y-2 list-decimal list-inside text-gray-800">
-                            @foreach ($venture->steps as $step)
-                                <li class="flex items-start gap-3">
-                                    <form method="POST"
-                                          action="{{ route('steps.completion', [$venture, $step]) }}"
-                                          data-toggle-completion
-                                          class="flex items-start gap-2 flex-1">
-                                        @csrf
-                                        @method('PATCH')
-                                        <label class="flex items-start gap-2 flex-1 cursor-pointer">
-                                            <input type="checkbox"
-                                                   name="is_completed"
-                                                   value="1"
-                                                   {{ $step->is_completed ? 'checked' : '' }}
-                                                   class="mt-1 rounded border-gray-300">
-                                            <span class="flex flex-col">
-                                                <span data-step-body
-                                                      class="{{ $step->is_completed ? 'line-through text-gray-400' : '' }}">
-                                                    {{ $step->body }}
-                                                </span>
-                                                @if ($step->deadline)
-                                                    @php
-                                                        // data-pressure-class is deadline-only (completion-agnostic),
-                                                        // so the live toggle can restore emphasis on un-complete even
-                                                        // for a step that loaded completed. Whether it is *shown* now
-                                                        // is the separate `! is_completed` render gate below.
-                                                        $pressure = $step->deadlinePressure();
-                                                        $pressureClass = match ($pressure) {
-                                                            'overdue' => 'text-red-600 font-medium',
-                                                            'imminent' => 'text-amber-700 font-medium',
-                                                            default => '',
-                                                        };
-                                                        $label = $pressure === 'overdue' ? 'Overdue' : 'Due';
-                                                    @endphp
-                                                    <span data-deadline-badge
-                                                          data-pressure-class="{{ $pressureClass }}"
-                                                          class="text-xs text-gray-500 {{ $step->is_completed ? '' : $pressureClass }}">
-                                                        {{ $label }} {{ $step->deadline->format('M j') }}
-                                                    </span>
-                                                @endif
+                    </div>
+                @else
+                    <ul class="mt-4 space-y-2 text-base-content/80">
+                        @foreach ($venture->steps as $step)
+                            <li class="flex items-start justify-between gap-3">
+                                <form method="POST"
+                                      action="{{ route('steps.completion', [$venture, $step]) }}"
+                                      data-toggle-completion
+                                      class="flex items-start gap-2 flex-1 min-w-0">
+                                    @csrf
+                                    @method('PATCH')
+                                    <label class="flex items-start gap-2 flex-1 min-w-0 cursor-pointer">
+                                        <input type="checkbox"
+                                               name="is_completed"
+                                               value="1"
+                                               {{ $step->is_completed ? 'checked' : '' }}
+                                               class="checkbox checkbox-sm mt-0.5 shrink-0">
+                                        <span class="flex flex-col min-w-0">
+                                            <span data-step-body
+                                                  class="leading-6 {{ $step->is_completed ? 'line-through text-base-content/40' : '' }}">
+                                                {{ $step->body }}
                                             </span>
-                                        </label>
-                                        <noscript>
-                                            <button type="submit"
-                                                    class="text-xs text-gray-700 hover:text-gray-900 underline">
-                                                Save
-                                            </button>
-                                        </noscript>
-                                    </form>
-                                    <a href="{{ route('steps.edit', [$venture, $step]) }}"
-                                       class="text-xs text-gray-600 hover:text-gray-900">
+                                            @if ($step->deadline)
+                                                @php
+                                                    // data-pressure-class is deadline-only (completion-agnostic),
+                                                    // so the live toggle can restore emphasis on un-complete even
+                                                    // for a step that loaded completed. Whether it is *shown* now
+                                                    // is the separate `! is_completed` render gate below.
+                                                    $pressure = $step->deadlinePressure();
+                                                    $pressureClass = match ($pressure) {
+                                                        'overdue' => 'text-error font-medium',
+                                                        'imminent' => 'text-warning font-medium',
+                                                        default => '',
+                                                    };
+                                                    $label = $pressure === 'overdue' ? 'Overdue' : 'Due';
+                                                @endphp
+                                                <span data-deadline-badge
+                                                      data-pressure-class="{{ $pressureClass }}"
+                                                      class="text-xs text-base-content/60 {{ $step->is_completed ? '' : $pressureClass }}">
+                                                    {{ $label }} {{ $step->deadline->format('M j') }}
+                                                </span>
+                                            @endif
+                                        </span>
+                                    </label>
+                                    <noscript>
+                                        <button type="submit" class="link link-hover text-xs leading-6">
+                                            Save
+                                        </button>
+                                    </noscript>
+                                </form>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <x-ui.button :href="route('steps.edit', [$venture, $step])"
+                                                 variant="neutral" class="btn-outline btn-xs">
                                         Edit
-                                    </a>
+                                    </x-ui.button>
                                     <form method="POST"
                                           action="{{ route('steps.destroy', [$venture, $step]) }}"
                                           onsubmit="return confirm('Delete this step?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit"
-                                                class="text-xs text-red-600 hover:text-red-800">
+                                        <x-ui.button type="submit" variant="error" class="btn-outline btn-xs">
                                             Delete
-                                        </button>
+                                        </x-ui.button>
                                     </form>
-                                </li>
-                            @endforeach
-                        </ol>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
 
-                        <div class="mt-4 flex items-center gap-4">
-                            <a href="{{ route('steps.create', $venture) }}"
-                               class="text-sm text-gray-700 hover:text-gray-900">
-                                + Add step
-                            </a>
-                            <form method="POST" action="{{ route('steps.suggestions.preview', $venture) }}" class="inline-block">
-                                @csrf
-                                <button type="submit" class="text-sm text-gray-700 hover:text-gray-900">
-                                    Suggest more with AI
-                                </button>
-                            </form>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="flex items-baseline justify-between">
-                        <h3 class="font-medium text-sm text-gray-500 uppercase tracking-wide">Expenses</h3>
-                        <p class="text-sm text-gray-600">Total: {{ number_format($totalCost ?? 0, 2) }}</p>
+                    <div class="mt-4 flex items-center gap-4">
+                        <x-ui.button :href="route('steps.create', $venture)" variant="primary" class="btn-outline btn-sm">
+                            + Add step
+                        </x-ui.button>
+                        <form method="POST" action="{{ route('steps.suggestions.preview', $venture) }}" class="inline-block">
+                            @csrf
+                            <x-ui.button type="submit" variant="primary" class="btn-outline btn-sm">
+                                Suggest more with AI
+                            </x-ui.button>
+                        </form>
                     </div>
+                @endif
+            </x-ui.card>
 
-                    @if ($venture->expenses->isEmpty())
-                        <div class="mt-4 space-y-3">
-                            <p class="text-sm text-gray-600">No expenses yet.</p>
-                            <a href="{{ route('expenses.create', $venture) }}"
-                               class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent
-                                      rounded-md font-semibold text-xs text-white uppercase tracking-widest
-                                      hover:bg-gray-700">
-                                + Add expense
-                            </a>
-                        </div>
-                    @else
-                        <ul class="mt-3 divide-y divide-gray-100">
-                            @foreach ($venture->expenses as $expense)
-                                <li class="py-2 flex items-start justify-between gap-4">
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm text-gray-800">{{ $expense->description }}</p>
-                                        <p class="text-xs text-gray-500">{{ $expense->date->toDateString() }} · {{ $expense->amount }}</p>
-                                    </div>
-                                    <a href="{{ route('expenses.edit', [$venture, $expense]) }}"
-                                       class="text-xs text-gray-600 hover:text-gray-900">Edit</a>
+            <x-ui.card>
+                <div class="flex items-baseline justify-between border-b border-base-300 pb-3">
+                    <h3 class="font-medium text-sm text-base-content/60 uppercase tracking-wide">Expenses</h3>
+                    <p class="grow-0 shrink-0 text-base font-semibold text-base-content">Total: {{ number_format($totalCost ?? 0, 2) }}</p>
+                </div>
+
+                @if ($venture->expenses->isEmpty())
+                    <div class="mt-4 space-y-3">
+                        <p class="text-sm text-base-content/70">No expenses yet.</p>
+                        <x-ui.button :href="route('expenses.create', $venture)" class="btn-sm">
+                            + Add expense
+                        </x-ui.button>
+                    </div>
+                @else
+                    <ul class="mt-3 divide-y divide-base-300">
+                        @foreach ($venture->expenses as $expense)
+                            <li class="py-2 flex items-start justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm text-base-content/80">{{ $expense->description }}</p>
+                                    <p class="text-xs text-base-content/60">{{ $expense->date->toDateString() }} · {{ $expense->amount }}</p>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <x-ui.button :href="route('expenses.edit', [$venture, $expense])"
+                                                 variant="neutral" class="btn-outline btn-xs">Edit</x-ui.button>
                                     <form method="POST"
                                           action="{{ route('expenses.destroy', [$venture, $expense]) }}"
                                           onsubmit="return confirm('Delete this expense?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-xs text-red-600 hover:text-red-800">Delete</button>
+                                        <x-ui.button type="submit" variant="error" class="btn-outline btn-xs">Delete</x-ui.button>
                                     </form>
-                                </li>
-                            @endforeach
-                        </ul>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
 
-                        <div class="mt-4">
-                            <a href="{{ route('expenses.create', $venture) }}"
-                               class="text-sm text-gray-700 hover:text-gray-900">+ Add expense</a>
-                        </div>
-                    @endif
-                </div>
-            </div>
+                    <div class="mt-4">
+                        <x-ui.button :href="route('expenses.create', $venture)" variant="primary" class="btn-outline btn-sm">
+                            + Add expense
+                        </x-ui.button>
+                    </div>
+                @endif
+            </x-ui.card>
         </div>
     </div>
 @endsection

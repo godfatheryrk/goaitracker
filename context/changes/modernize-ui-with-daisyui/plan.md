@@ -457,37 +457,37 @@ touching component call sites.
 
 #### Automated
 
-- [x] 1.1 npm install completes and package.json lists daisyUI v5
-- [x] 1.2 npm run build compiles with no Tailwind/daisyUI errors
-- [x] 1.3 composer run test is green
+- [x] 1.1 npm install completes and package.json lists daisyUI v5 — a14ba61
+- [x] 1.2 npm run build compiles with no Tailwind/daisyUI errors — a14ba61
+- [x] 1.3 composer run test is green — a14ba61
 
 #### Manual
 
-- [x] 1.4 Login, register, landing render in both light and dark themes
-- [x] 1.5 Nav theme toggle flips light↔dark instantly, no reload, no console error
-- [x] 1.6 Guest screens load dark via --prefersdark when OS prefers dark
-- [x] 1.7 No white-card-on-dark artifacts on any Phase 1 surface
+- [x] 1.4 Login, register, landing render in both light and dark themes — a14ba61
+- [x] 1.5 Nav theme toggle flips light↔dark instantly, no reload, no console error — a14ba61
+- [x] 1.6 Guest screens load dark via --prefersdark when OS prefers dark — a14ba61
+- [x] 1.7 No white-card-on-dark artifacts on any Phase 1 surface — a14ba61
 
 ### Phase 2: Venture list & detail (JS-coupled — newralgic)
 
 #### Automated
 
-- [ ] 2.1 composer run test green incl. rewritten ShowVentureDeadlineTest + unchanged Toggle/Progress/List/TotalCost tests
-- [ ] 2.2 npm run build compiles
+- [x] 2.1 composer run test green incl. rewritten ShowVentureDeadlineTest + unchanged Toggle/Progress/List/TotalCost tests
+- [x] 2.2 npm run build compiles
 
 #### Manual
 
-- [ ] 2.3 Toggle flips strike-through + deadline emphasis live and restores on un-complete (both themes)
-- [ ] 2.4 JS-disabled <noscript> Save fallback persists the toggle (302)
-- [ ] 2.5 List shows deadline marker, total cost, progress text; delete confirm fires on list and detail
-- [ ] 2.6 Overdue→error, imminent→warning, completed→muted in both themes
+- [x] 2.3 Toggle flips strike-through + deadline emphasis live and restores on un-complete (both themes)
+- [x] 2.4 JS-disabled <noscript> Save fallback persists the toggle (302)
+- [x] 2.5 List shows deadline marker, total cost, progress text; delete confirm fires on list and detail
+- [x] 2.6 Overdue→error, imminent→warning, completed→muted in both themes
 
 ### Phase 3: Remaining forms
 
 #### Automated
 
-- [ ] 3.1 composer run test green incl. SuggestExtensionTest field-name assertions + step/expense tests
-- [ ] 3.2 npm run build compiles
+- [x] 3.1 composer run test green incl. SuggestExtensionTest field-name assertions + step/expense tests
+- [x] 3.2 npm run build compiles
 
 #### Manual
 
