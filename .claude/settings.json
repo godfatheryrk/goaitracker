@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php \"${CLAUDE_PROJECT_DIR}/.claude/hooks/pint-on-edit.php\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
