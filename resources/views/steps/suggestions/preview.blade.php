@@ -9,49 +9,44 @@
 @section('content')
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <p class="text-sm text-gray-600">
-                        Uncheck any suggestions you don't want to keep. We'll add the rest to the end of your step list.
-                    </p>
+            <x-ui.card>
+                <p class="text-sm text-base-content/70">
+                    Uncheck any suggestions you don't want to keep. We'll add the rest to the end of your step list.
+                </p>
 
-                    @error('suggestions')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                @error('suggestions')
+                    <x-ui.alert variant="error" class="mt-3">{{ $message }}</x-ui.alert>
+                @enderror
 
-                    <form method="POST" action="{{ route('steps.suggestions.store', $venture) }}">
-                        @csrf
+                <form method="POST" action="{{ route('steps.suggestions.store', $venture) }}">
+                    @csrf
 
-                        <ol class="mt-4 space-y-3 list-decimal list-inside">
-                            @foreach ($suggestions as $i => $body)
-                                <li class="flex items-start gap-2">
+                    <ul class="mt-4 space-y-2">
+                        @foreach ($suggestions as $i => $body)
+                            <li>
+                                <label for="suggestion-{{ $i }}"
+                                       class="flex items-start gap-3 cursor-pointer rounded-lg p-2 hover:bg-base-200">
                                     <input type="checkbox"
                                            name="suggestions[{{ $i }}][keep]"
                                            value="1"
                                            checked
                                            id="suggestion-{{ $i }}"
-                                           class="mt-1 rounded border-gray-300">
+                                           class="checkbox checkbox-sm mt-0.5 shrink-0">
                                     <input type="hidden" name="suggestions[{{ $i }}][body]" value="{{ $body }}">
-                                    <label for="suggestion-{{ $i }}" class="ml-2 text-gray-800">{{ $body }}</label>
-                                </li>
-                            @endforeach
-                        </ol>
+                                    <span class="text-base-content/80">{{ $body }}</span>
+                                </label>
+                            </li>
+                        @endforeach
+                    </ul>
 
-                        <div class="flex items-center justify-end mt-6 space-x-4">
-                            <a href="{{ route('ventures.show', $venture) }}"
-                               class="text-sm text-gray-600 hover:text-gray-900">
-                                Cancel
-                            </a>
-                            <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent
-                                           rounded-md font-semibold text-xs text-white uppercase tracking-widest
-                                           hover:bg-gray-700">
-                                Keep selected
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+                    <div class="flex items-center justify-end gap-4 mt-6">
+                        <x-ui.button :href="route('ventures.show', $venture)" variant="ghost">
+                            Cancel
+                        </x-ui.button>
+                        <x-ui.button type="submit">Keep selected</x-ui.button>
+                    </div>
+                </form>
+            </x-ui.card>
         </div>
     </div>
 @endsection

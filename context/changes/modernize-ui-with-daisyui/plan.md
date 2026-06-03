@@ -472,15 +472,15 @@ touching component call sites.
 
 #### Automated
 
-- [x] 2.1 composer run test green incl. rewritten ShowVentureDeadlineTest + unchanged Toggle/Progress/List/TotalCost tests
-- [x] 2.2 npm run build compiles
+- [x] 2.1 composer run test green incl. rewritten ShowVentureDeadlineTest + unchanged Toggle/Progress/List/TotalCost tests — 5ee2f5b
+- [x] 2.2 npm run build compiles — 5ee2f5b
 
 #### Manual
 
-- [x] 2.3 Toggle flips strike-through + deadline emphasis live and restores on un-complete (both themes)
-- [x] 2.4 JS-disabled <noscript> Save fallback persists the toggle (302)
-- [x] 2.5 List shows deadline marker, total cost, progress text; delete confirm fires on list and detail
-- [x] 2.6 Overdue→error, imminent→warning, completed→muted in both themes
+- [x] 2.3 Toggle flips strike-through + deadline emphasis live and restores on un-complete (both themes) — 5ee2f5b
+- [x] 2.4 JS-disabled <noscript> Save fallback persists the toggle (302) — 5ee2f5b
+- [x] 2.5 List shows deadline marker, total cost, progress text; delete confirm fires on list and detail — 5ee2f5b
+- [x] 2.6 Overdue→error, imminent→warning, completed→muted in both themes — 5ee2f5b
 
 ### Phase 3: Remaining forms
 
@@ -491,6 +491,6 @@ touching component call sites.
 
 #### Manual
 
-- [ ] 3.3 All six forms render/submit in both themes; validation errors display via ui.input/ui.alert
-- [ ] 3.4 AI-suggestion preview keep/uncheck persists chosen rows; cancel returns to venture
-- [ ] 3.5 No white-on-dark artifacts; visual consistency across all 14 views
+- [x] 3.3 All six forms render/submit in both themes; validation errors display via ui.input/ui.alert
+- [x] 3.4 AI-suggestion preview keep/uncheck persists chosen rows; cancel returns to venture
+- [x] 3.5 No white-on-dark artifacts; visual consistency across all 14 views
