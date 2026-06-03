@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-gray-800 leading-tight">Start a new venture</h2>
+    <h2 class="font-semibold text-xl text-base-content leading-tight">Start a new venture</h2>
 @endsection
 
 @section('content')

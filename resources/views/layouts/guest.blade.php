@@ -8,15 +8,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased">
-    <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-0 bg-gray-100">
+    <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-0 bg-base-200">
         <div class="mt-6">
-            <a href="/" class="text-2xl font-semibold text-gray-700">
+            <a href="/" class="text-2xl font-semibold text-base-content">
                 {{ config('app.name', 'GOAITracker') }}
             </a>
         </div>
 
-        <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-            @yield('content')
+        <div class="w-full sm:max-w-md mt-6">
+            <x-ui.card>
+                @yield('content')
+            </x-ui.card>
         </div>
     </div>
 </body>

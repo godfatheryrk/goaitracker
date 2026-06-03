@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('header')
-    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+    <h2 class="font-semibold text-xl text-base-content leading-tight">
         Edit expense in: {{ $venture->title }}
     </h2>
 @endsection
