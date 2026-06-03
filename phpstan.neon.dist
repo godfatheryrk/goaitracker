@@ -1,11 +1,6 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/nesbot/carbon/extension.neon
-    # Frozen snapshot of pre-existing findings so CI is green from day one and
-    # new code is held to the level below. Burn it down over time (see the
-    # categorised list in the adoption notes); regenerate with
-    # `vendor/bin/phpstan analyse --generate-baseline`.
-    - phpstan-baseline.neon
 
 parameters:
     paths:

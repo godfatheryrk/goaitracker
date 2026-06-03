@@ -58,11 +58,13 @@ class Step extends Model
         return null;
     }
 
+    /** @return BelongsTo<Venture, $this> */
     public function venture(): BelongsTo
     {
         return $this->belongsTo(Venture::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');

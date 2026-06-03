@@ -12,9 +12,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class StepFactory extends Factory
 {
-    /**
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $venture = Venture::factory()->create();

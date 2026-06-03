@@ -13,9 +13,6 @@ class ExpenseFactory extends Factory
 {
     protected $model = Expense::class;
 
-    /**
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         $venture = Venture::factory()->create();
