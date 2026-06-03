@@ -312,23 +312,23 @@ No production schema or behavior changes. The new `FakeAiStepSuggester` and the 
 
 #### Automated
 
-- [x] 2.1 The exemplar passes: `npx playwright test seed.spec.ts`
+- [x] 2.1 The exemplar passes: `npx playwright test seed.spec.ts` — 755dc60
 
 #### Manual
 
-- [x] 2.2 `seed.spec.ts` reviewed against the five anti-patterns — violates none
-- [x] 2.3 Seed-created venture gone from the dashboard after the run (cleanup works)
+- [x] 2.2 `seed.spec.ts` reviewed against the five anti-patterns — violates none — 755dc60
+- [x] 2.3 Seed-created venture gone from the dashboard after the run (cleanup works) — 755dc60
 
 ### Phase 3: Risk #1 Spec — AI-Graceful Degrade
 
 #### Automated
 
-- [ ] 3.1 The spec passes: `npx playwright test venture-create-ai-graceful.spec.ts`
+- [x] 3.1 The spec passes: `npx playwright test venture-create-ai-graceful.spec.ts`
 
 #### Manual
 
-- [ ] 3.2 Deliberate-break: fake ignores sentinel → spec goes red → reverted (inversion documented)
-- [ ] 3.3 Alert renders amber (not red); typed title not lost
+- [x] 3.2 Deliberate-break: fake ignores sentinel → spec goes red → reverted (inversion documented)
+- [x] 3.3 Alert renders amber (not red); typed title not lost
 
 ### Phase 4: Risk #2 Spec — 7-Step Render
 
