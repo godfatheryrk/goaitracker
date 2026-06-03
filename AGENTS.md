@@ -15,6 +15,7 @@ Personal venture/goal tracker pairing manual planning with AI-suggested next ste
 - `composer run dev` — runs `artisan serve` + queue listener + `pail` + Vite concurrently. Use this for local dev, not bare `artisan serve`.
 - `composer run test` — runs `artisan config:clear` then `artisan test`. Use this, not bare `phpunit`.
 - `vendor/bin/pint` — format PHP before committing.
+- `composer run analyse` — Larastan (PHPStan level 5) static analysis. Run before committing; keep it green. Findings present when Larastan was adopted are frozen in `phpstan-baseline.neon` — do not add to the baseline to silence new errors; fix them or justify a narrow `ignoreErrors` entry.
 - DB: SQLite at `database/database.sqlite` (auto-created by the Laravel installer).
 - Not yet under git.
 
