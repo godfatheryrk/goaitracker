@@ -346,8 +346,8 @@ No production schema or behavior changes. The new `FakeAiStepSuggester` and the 
 
 #### Automated
 
-- [x] 5.1 Doc no longer presents browser/network route interception as the LLM-mock mechanism: `grep -n "route interception" context/foundation/test-plan.md`
+- [x] 5.1 Doc no longer presents browser/network route interception as the LLM-mock mechanism: `grep -n "route interception" context/foundation/test-plan.md` — efa6492
 
 #### Manual
 
-- [x] 5.2 §4, §6.2, §6.3 read correctly and match what Phases 1–4 built
+- [x] 5.2 §4, §6.2, §6.3 read correctly and match what Phases 1–4 built — efa6492
