@@ -31,16 +31,19 @@ class User extends Authenticatable
         ];
     }
 
+    /** @return HasMany<AiCallCounter, $this> */
     public function aiCallCounters(): HasMany
     {
         return $this->hasMany(AiCallCounter::class, 'owner_id');
     }
 
+    /** @return HasMany<Venture, $this> */
     public function ventures(): HasMany
     {
         return $this->hasMany(Venture::class, 'owner_id');
     }
 
+    /** @return HasMany<Expense, $this> */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class, 'owner_id');

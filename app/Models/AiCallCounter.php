@@ -11,6 +11,7 @@ class AiCallCounter extends Model
 
     protected $casts = ['day' => 'date'];
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
