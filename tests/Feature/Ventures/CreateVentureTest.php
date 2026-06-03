@@ -81,7 +81,7 @@ class CreateVentureTest extends TestCase
         $this->assertSame(0, $venture->steps()->count());
 
         $response->assertRedirect(route('ventures.show', $venture));
-        $response->assertSessionHas('ai_unavailable');
+        $response->assertSessionHas('ai_unavailable', "AI couldn't suggest steps right now — you can add them manually.");
     }
 
     public function test_validation_fails_when_title_is_missing(): void

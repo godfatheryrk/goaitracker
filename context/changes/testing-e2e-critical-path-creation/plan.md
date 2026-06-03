@@ -323,24 +323,24 @@ No production schema or behavior changes. The new `FakeAiStepSuggester` and the 
 
 #### Automated
 
-- [x] 3.1 The spec passes: `npx playwright test venture-create-ai-graceful.spec.ts`
+- [x] 3.1 The spec passes: `npx playwright test venture-create-ai-graceful.spec.ts` — 790bdb6
 
 #### Manual
 
-- [x] 3.2 Deliberate-break: fake ignores sentinel → spec goes red → reverted (inversion documented)
-- [x] 3.3 Alert renders amber (not red); typed title not lost
+- [x] 3.2 Deliberate-break: fake ignores sentinel → spec goes red → reverted (inversion documented) — 790bdb6
+- [x] 3.3 Alert renders amber (not red); typed title not lost — 790bdb6
 
 ### Phase 4: Risk #2 Spec — 7-Step Render
 
 #### Automated
 
-- [ ] 4.1 The spec passes: `npx playwright test venture-create-seven-steps.spec.ts`
-- [ ] 4.2 Full E2E suite passes together: `npm run test:e2e`
+- [x] 4.1 The spec passes: `npx playwright test venture-create-seven-steps.spec.ts`
+- [x] 4.2 Full E2E suite passes together: `npm run test:e2e`
 
 #### Manual
 
-- [ ] 4.3 Deliberate-break: fake returns 6 steps (or break show `@foreach`) → spec goes red → reverted (inversion documented)
-- [ ] 4.4 7 distinct steps render in order on the detail view
+- [x] 4.3 Deliberate-break: fake returns 6 steps (or break show `@foreach`) → spec goes red → reverted (inversion documented)
+- [x] 4.4 7 distinct steps render in order on the detail view
 
 ### Phase 5: Reconcile test-plan.md
 

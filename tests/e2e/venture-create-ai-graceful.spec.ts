@@ -3,18 +3,23 @@ import { test, expect } from '@playwright/test';
 /**
  * RISK #1 (context/foundation/test-plan.md §2) — AI fails on venture-create, graceful degrade.
  *
- * When the AI step suggestion is unavailable, creating a venture must still succeed:
- * the venture is persisted, an AMBER (not red) "add them manually" notice shows, the
- * typed title is preserved, and the page stays usable (the manual add-step path is
- * offered). Never a 500, never a red error, never lost input.
+ * When the AI step suggestion is unavailable, creating a venture must still succeed and
+ * land the user on a USABLE detail view: the venture is persisted, the typed title is
+ * preserved, the step list is empty, and the manual add-step path is offered. Never a
+ * 500, never lost input.
+ *
+ * This spec asserts the DURABLE, render-derived consequences of graceful degrade — all
+ * derived from the venture's own persisted state, so they are deterministic under
+ * parallel workers. The ephemeral `ai_unavailable` FLASH notice is deliberately NOT
+ * asserted here: flash lives for one request in the (shared, single-user) E2E session,
+ * so a concurrent spec could age it out. The flash — including its exact amber copy — is
+ * guarded deterministically at the Feature layer
+ * (tests/Feature/Ventures/CreateVentureTest::test_creating_a_venture_succeeds_with_empty_steps_on_ai_failure).
  *
  * The failure is forced at the SERVER seam, not the browser: the title contains the
  * `force-ai-empty` sentinel, which makes FakeAiStepSuggester return [] (see
  * tests/e2e/README.md). Browser route interception cannot reach this synchronous
  * server-side call.
- *
- * Asserts the graceful-degrade BEHAVIOUR (notice + preserved title + usable page),
- * NOT merely the redirect/URL.
  */
 test.describe('venture create — risk #1 AI-graceful degrade', () => {
     let ventureTitle: string;
@@ -38,7 +43,7 @@ test.describe('venture create — risk #1 AI-graceful degrade', () => {
         await expect(row).toHaveCount(0);
     });
 
-    test('forced AI failure still creates the venture and degrades gracefully', async ({ page }) => {
+    test('forced AI failure still creates a usable venture with an empty plan', async ({ page }) => {
         // Sentinel substring forces FakeAiStepSuggester → [] (the AI-unavailable path).
         ventureTitle = `force-ai-empty venture ${Date.now()}`;
 
@@ -54,15 +59,14 @@ test.describe('venture create — risk #1 AI-graceful degrade', () => {
         // Wait for STATE: the venture was created and we landed on its detail view.
         await page.waitForURL(/\/ventures\/\d+/);
 
-        // (a) The amber notice is visible, by role + exact text.
-        await expect(page.getByRole('alert')).toHaveText(
-            "AI couldn't suggest steps right now — you can add them manually.",
-        );
-
-        // (b) The typed title is preserved as the page heading (input was not lost).
+        // The typed title is preserved as the page heading (input was not lost).
         await expect(page.getByRole('heading', { name: ventureTitle })).toBeVisible();
 
-        // (c) The page is usable: the empty-list manual add-step affordance is offered.
+        // The plan is empty (AI returned nothing) — the durable signal of the degrade.
+        await expect(page.getByText('No steps yet.')).toBeVisible();
+        await expect(page.getByText('0 of 0 completed')).toBeVisible();
+
+        // The page stays usable: the manual add-step path is offered.
         await expect(
             page.getByRole('link', { name: '+ Add your first step' }),
         ).toBeVisible();
