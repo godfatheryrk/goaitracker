@@ -1,0 +1,23 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+    # Frozen snapshot of pre-existing findings so CI is green from day one and
+    # new code is held to the level below. Burn it down over time (see the
+    # categorised list in the adoption notes); regenerate with
+    # `vendor/bin/phpstan analyse --generate-baseline`.
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+        - routes/
+        - database/
+
+    # Level 5 is a pragmatic start for an existing codebase; raise toward 10
+    # (the max) once it passes clean. See the project's tech-stack.md "typed
+    # gate" note — this is what compensates for PHP being dynamically typed.
+    level: 5
+
+    # Larastan understands Eloquent model magic; keep these on to surface real
+    # bugs (undefined properties, bad relationship calls, owner_id mis-scoping).
+    checkModelProperties: true

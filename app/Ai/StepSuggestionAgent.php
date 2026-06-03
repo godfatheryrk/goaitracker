@@ -2,7 +2,6 @@
 
 namespace App\Ai;
 
-use App\Models\User;
 use Laravel\Ai\Attributes\Temperature;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Promptable;
@@ -13,7 +12,6 @@ class StepSuggestionAgent implements Agent
     use Promptable;
 
     public function __construct(
-        private User $user,
         private string $title,
         private string $description,
         private array $currentSteps = [],
@@ -42,6 +40,16 @@ class StepSuggestionAgent implements Agent
             .'Do not include rationale, expected duration, or any other field. '
             .'Respond with ONLY a valid JSON object with a single key "steps" containing an array of exactly 7 strings. '
             .'No markdown, no code fences, no explanation — just the JSON object.';
+
+        // The venture the user is planning. Without this the model has no idea
+        // WHAT it is planning and returns a generic plan — the product's whole
+        // value (PRD: "AI proposes the step list from the venture description")
+        // depends on these two fields reaching the model.
+        $base .= "\n\nVenture title: {$this->title}";
+
+        if (trim($this->description) !== '') {
+            $base .= "\nVenture description: {$this->description}";
+        }
 
         if (! empty($this->currentSteps)) {
             $list = implode("\n", array_map(

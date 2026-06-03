@@ -37,7 +37,6 @@ class AiStepSuggester
         try {
             // 4. Dispatch agent
             $response = StepSuggestionAgent::make(
-                user: $user,
                 title: $title,
                 description: $description,
                 currentSteps: $currentSteps,
