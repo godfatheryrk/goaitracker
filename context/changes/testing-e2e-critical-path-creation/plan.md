@@ -334,20 +334,20 @@ No production schema or behavior changes. The new `FakeAiStepSuggester` and the 
 
 #### Automated
 
-- [x] 4.1 The spec passes: `npx playwright test venture-create-seven-steps.spec.ts`
-- [x] 4.2 Full E2E suite passes together: `npm run test:e2e`
+- [x] 4.1 The spec passes: `npx playwright test venture-create-seven-steps.spec.ts` — 48ff996
+- [x] 4.2 Full E2E suite passes together: `npm run test:e2e` — 48ff996
 
 #### Manual
 
-- [x] 4.3 Deliberate-break: fake returns 6 steps (or break show `@foreach`) → spec goes red → reverted (inversion documented)
-- [x] 4.4 7 distinct steps render in order on the detail view
+- [x] 4.3 Deliberate-break: fake returns 6 steps (or break show `@foreach`) → spec goes red → reverted (inversion documented) — 48ff996
+- [x] 4.4 7 distinct steps render in order on the detail view — 48ff996
 
 ### Phase 5: Reconcile test-plan.md
 
 #### Automated
 
-- [ ] 5.1 Doc no longer presents browser/network route interception as the LLM-mock mechanism: `grep -n "route interception" context/foundation/test-plan.md`
+- [x] 5.1 Doc no longer presents browser/network route interception as the LLM-mock mechanism: `grep -n "route interception" context/foundation/test-plan.md`
 
 #### Manual
 
-- [ ] 5.2 §4, §6.2, §6.3 read correctly and match what Phases 1–4 built
+- [x] 5.2 §4, §6.2, §6.3 read correctly and match what Phases 1–4 built
