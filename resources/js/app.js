@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (bodyEl) {
                     bodyEl.classList.toggle('line-through', data.is_completed);
-                    bodyEl.classList.toggle('text-gray-400', data.is_completed);
+                    bodyEl.classList.toggle('text-base-content/40', data.is_completed);
                 }
 
                 if (deadlineBadge) {

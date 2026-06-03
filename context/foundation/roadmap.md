@@ -3,7 +3,7 @@ project: GOAITracker
 version: 1
 status: draft
 created: 2026-05-27
-updated: 2026-05-28
+updated: 2026-06-03
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -44,8 +44,9 @@ entire product thesis fails; everything else only matters once this works.
 | S-02  | edit-and-track-steps               | add / edit / delete / complete steps and see progress                   | S-01          | FR-010, FR-011, FR-012, FR-013, FR-018, NFR(edit-latency) | done     |
 | S-03  | extend-plan-with-ai                | trigger AI to append more steps (append-only, off-metric)               | S-01, F-02    | FR-009                                                | done     |
 | S-04  | list-and-delete-ventures           | view a list of own ventures, open or delete one                         | S-01          | FR-005, FR-006, FR-007                                | done     |
-| S-05  | step-deadlines-and-pressure-signals | set optional step deadlines; see imminent/overdue badges + list marker  | S-02, S-04    | FR-014, FR-020, FR-021                                | proposed |
+| S-05  | step-deadlines-and-pressure-signals | set optional step deadlines; see imminent/overdue badges + list marker  | S-02, S-04    | FR-014, FR-020, FR-021                                | done |
 | S-06  | venture-expenses-and-cost          | add / edit / delete expenses; see total cost on detail + list           | S-01, S-04    | FR-015, FR-016, FR-017, FR-019                        | done |
+| S-07  | modernize-ui-with-daisyui          | see a modernized, consistent UI (daisyUI) across every surface          | S-01–S-06     | — (UX quality; preserves NFR(edit-latency))           | proposed |
 
 ## Streams
 
@@ -56,6 +57,7 @@ Navigation aid — groups items that share a Prerequisites chain. Canonical orde
 | A      | Plan & AI core         | `F-01` → `S-01` → `S-02`                        | The north-star spine; the must-have path under the `speed` goal.             |
 | B      | AI generation service  | `F-02` → `S-03`                                 | Joins Stream A at `S-01` (F-02 also unlocks the initial generation).         |
 | C      | Portfolio & signals    | `S-04` → `S-06`; `S-05`                          | Return-surface + cost/deadline signals; `S-05` joins Stream A at `S-02`.     |
+| D      | UX & visual polish     | `S-07`                                          | Cross-cutting restyle of every shipped surface; runs after the feature slices land. |
 
 ## Baseline
 
@@ -146,7 +148,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** The list is the return surface that the secondary success metric (users come back at least once) depends on. Its cross-venture signals — total cost (S-06) and deadline marker (S-05) — are added by those slices rather than blocking this one, so the list ships thin and gains signals incrementally.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Step deadlines and pressure signals
 
@@ -158,7 +160,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** FR-020's badge needs steps with completion state (S-02); FR-021's list marker needs the list surface (S-04). Sequenced after both so deadline data and both surfaces (detail badge + list marker) are populated in one coherent pass. Deadlines are optional throughout — reminders only fire for steps that set one.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: Venture expenses and total cost
 
@@ -172,6 +174,44 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Risk:** FR-019 requires total cost on two surfaces, so this slice touches both detail and list (hence the S-04 prerequisite). Lower product-thesis priority than the AI loop, so sequenced after the core wedge under the `speed` goal. Edit/delete carry the destructive-action confirm guardrail.
 - **Status:** done
 
+### S-07: Modernize the UI with daisyUI
+
+- **Outcome:** user sees a visually modernized, consistent interface across every surface
+  (auth, venture list + detail, step create/edit, AI-suggestion preview, expense create/edit),
+  built on daisyUI v5 components, with no behavioural regressions — the completion-toggle island,
+  deadline badges, progress text, and inline delete confirmations all keep working.
+- **Change ID:** modernize-ui-with-daisyui
+- **PRD refs:** — (no new FR; a quality/polish slice. NFR(edit-latency) on the toggle island
+  remains load-bearing and must be preserved.)
+- **Prerequisites:** S-01, S-02, S-03, S-04, S-05, S-06 (restyles the surfaces each one shipped).
+- **Parallel with:** — (touches nearly every view; best as a single focused pass, not concurrent
+  with a feature slice that adds new views).
+- **Blockers:** —
+- **Introduces (libraries / project changes):**
+  - `daisyui@latest` added to `package.json` devDependencies.
+  - In `resources/css/app.css`: `@plugin 'daisyui' { themes: light --default, dark --prefersdark; }`
+    using daisyUI's stock light/dark themes (no custom theme block) — same `@plugin` mechanism the
+    file already uses for Tailwind v4.
+  - A small set of reusable Blade components (`resources/views/components/ui/*` — button, card,
+    input, alert, badge) used across every view to DRY the restyle (project has none today).
+  - A pure-CSS dark-mode toggle (daisyUI `theme-controller`) in the navigation — no JS, so the
+    existing islands stay untouched.
+  - View-by-view restyle across the 14 Blade views + the 3 layouts/navigation, swapping
+    raw-Tailwind for the new components / daisyUI classes.
+- **Decisions (resolved 2026-06-03):**
+  - Dark mode: **light + dark**, switched via a pure-CSS daisyUI `theme-controller` (no JS).
+  - Restyle strategy: **reusable Blade components** (`components/ui/*`), not inline classes.
+  - Theme: **stock daisyUI** light/dark themes (no custom theme block).
+- **Risk:** The vanilla-JS islands in `resources/js/app.js` are class- and `data-*`-attribute
+  driven. The restyle MUST preserve the selectors `form[data-toggle-completion]`,
+  `[data-step-body]`, `[data-deadline-badge]` / `data-pressure-class`, `[data-progress-text]`,
+  the `meta[name="csrf-token"]` tag, and the inline `onsubmit="return confirm(...)"` delete
+  guards — or re-point the JS at the new markup in lockstep. daisyUI is CSS-only so this is
+  low-risk, but the toggle's dynamic class manipulation (`line-through`, `text-gray-400`, the
+  pressure classes) is the one place a careless wrapper could break behaviour. NFR(edit-latency)
+  on the toggle stays the acceptance bar.
+- **Status:** proposed
+
 ## Backlog Handoff
 
 | Roadmap ID | Change ID                          | Suggested issue title                                    | Ready for `/10x-plan` | Notes                                  |
@@ -182,14 +222,22 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-02       | edit-and-track-steps               | Edit / add / delete / complete steps + progress          | done                  | Needs S-01                             |
 | S-03       | extend-plan-with-ai                | Extend step plan via AI (append-only)                    | done                  | Needs S-01, F-02                       |
 | S-04       | list-and-delete-ventures           | Venture list + delete venture                            | done                  | Needs S-01                             |
-| S-05       | step-deadlines-and-pressure-signals | Step deadlines + imminent/overdue badges & list marker   | no                    | Needs S-02, S-04                       |
+| S-05       | step-deadlines-and-pressure-signals | Step deadlines + imminent/overdue badges & list marker   | done                  | Needs S-02, S-04                       |
 | S-06       | venture-expenses-and-cost          | Venture expenses + total cost on detail & list           | done                  | Needs S-01, S-04                       |
+| S-07       | modernize-ui-with-daisyui          | Modernize UI with daisyUI across all surfaces            | yes                   | Needs S-01–S-06; decisions locked — run `/10x-plan modernize-ui-with-daisyui` |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. One row per `F-NN` / `S-NN`.
 
 ## Open Roadmap Questions
 
 1. **Which LLM provider backs the AI step-suggestion service?** — Owner: user. Block: none (proceeding on Groq as the tentative default: OpenAI-compatible endpoint, permanent free tier with 14,400 RPD / 30 RPM that comfortably fits the F-02 24h-ceiling NFR, no credit card required. F-02 will wire a generic `AI_API_KEY` env var so a later swap to OpenRouter / OpenAI / Anthropic / Gemini is a config change, not a refactor). Gates the implementation detail of F-02, S-01, and S-03 if the answer changes.
+
+2. **Dark mode for the modernized UI?** — RESOLVED (2026-06-03): **light + dark**, switched via a
+   pure-CSS daisyUI `theme-controller` toggle (no JS). Drives the `app.css` `themes:` config in S-07.
+
+3. **Restyle via reusable Blade components or inline daisyUI classes?** — RESOLVED (2026-06-03):
+   **reusable Blade components** under `resources/views/components/ui/*`, using **stock daisyUI**
+   light/dark themes (no custom theme block).
 
 ## Parked
 
