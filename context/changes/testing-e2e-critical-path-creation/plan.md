@@ -298,26 +298,26 @@ No production schema or behavior changes. The new `FakeAiStepSuggester` and the 
 
 #### Automated
 
-- [x] 1.1 PHP formatting passes: `vendor/bin/pint --test`
-- [x] 1.2 Static analysis stays green: `composer run analyse`
-- [x] 1.3 E2E auth harness works end-to-end: `npx playwright test auth-smoke.spec.ts`
+- [x] 1.1 PHP formatting passes: `vendor/bin/pint --test` — b9e54a7
+- [x] 1.2 Static analysis stays green: `composer run analyse` — b9e54a7
+- [x] 1.3 E2E auth harness works end-to-end: `npx playwright test auth-smoke.spec.ts` — b9e54a7
 
 #### Manual
 
-- [x] 1.4 Dev DB `database/database.sqlite` unchanged after an E2E run (only `e2e.sqlite` written)
-- [x] 1.5 No outbound Groq call occurred (fake path in server log)
-- [x] 1.6 Fake is inert in normal dev (`composer run dev` uses the real suggester)
+- [x] 1.4 Dev DB `database/database.sqlite` unchanged after an E2E run (only `e2e.sqlite` written) — b9e54a7
+- [x] 1.5 No outbound Groq call occurred (fake path in server log) — b9e54a7
+- [x] 1.6 Fake is inert in normal dev (`composer run dev` uses the real suggester) — b9e54a7
 
 ### Phase 2: seed.spec.ts Exemplar + E2E Rules Lever
 
 #### Automated
 
-- [ ] 2.1 The exemplar passes: `npx playwright test seed.spec.ts`
+- [x] 2.1 The exemplar passes: `npx playwright test seed.spec.ts`
 
 #### Manual
 
-- [ ] 2.2 `seed.spec.ts` reviewed against the five anti-patterns — violates none
-- [ ] 2.3 Seed-created venture gone from the dashboard after the run (cleanup works)
+- [x] 2.2 `seed.spec.ts` reviewed against the five anti-patterns — violates none
+- [x] 2.3 Seed-created venture gone from the dashboard after the run (cleanup works)
 
 ### Phase 3: Risk #1 Spec — AI-Graceful Degrade
 
