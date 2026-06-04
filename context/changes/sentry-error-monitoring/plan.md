@@ -222,26 +222,26 @@ No database changes. `composer.lock` updates; deploys must run `composer install
 
 #### Automated
 
-- [x] 1.1 Package installs and autoload resolves: `composer require sentry/sentry-laravel` exits 0
-- [x] 1.2 Static analysis stays green: `composer run analyse`
-- [x] 1.3 Full suite stays green with no DSN configured: `composer run test`
-- [x] 1.4 `config/sentry.php` exists and `config:clear` + `php artisan about` shows no Sentry boot error
+- [x] 1.1 Package installs and autoload resolves: `composer require sentry/sentry-laravel` exits 0 — 29f3b82
+- [x] 1.2 Static analysis stays green: `composer run analyse` — 29f3b82
+- [x] 1.3 Full suite stays green with no DSN configured: `composer run test` — 29f3b82
+- [x] 1.4 `config/sentry.php` exists and `config:clear` + `php artisan about` shows no Sentry boot error — 29f3b82
 
 #### Manual
 
-- [x] 1.5 With a real DSN, `php artisan sentry:test` produces an event in Sentry
-- [x] 1.6 An uncaught exception shows in Sentry tagged with environment and release
-- [x] 1.7 With NO DSN set, the app boots and `sentry:test` reports not-configured (no crash)
+- [x] 1.5 With a real DSN, `php artisan sentry:test` produces an event in Sentry — 29f3b82
+- [x] 1.6 An uncaught exception shows in Sentry tagged with environment and release — 29f3b82
+- [x] 1.7 With NO DSN set, the app boots and `sentry:test` reports not-configured (no crash) — 29f3b82
 
 ### Phase 2: Id-only user context & AI-seam visibility
 
 #### Automated
 
-- [ ] 2.1 Static analysis stays green: `composer run analyse`
-- [ ] 2.2 Full suite stays green (existing `CreateVentureTest` AI-failure test still passes): `composer run test`
+- [x] 2.1 Static analysis stays green: `composer run analyse`
+- [x] 2.2 Full suite stays green (existing `CreateVentureTest` AI-failure test still passes): `composer run test`
 
 #### Manual
 
-- [ ] 2.3 Error event in Sentry carries `user.id` with NO email/IP
-- [ ] 2.4 Forced AI provider failure: venture still creates with 0 steps + `ai_unavailable` notice AND an exception appears in Sentry
-- [ ] 2.5 Forced AI failure with no DSN: venture still creates with 0 steps, no crash, nothing sent
+- [x] 2.3 Error event in Sentry carries `user.id` with NO email/IP
+- [x] 2.4 Forced AI provider failure: venture still creates with 0 steps + `ai_unavailable` notice AND an exception appears in Sentry
+- [x] 2.5 Forced AI failure with no DSN: venture still creates with 0 steps, no crash, nothing sent

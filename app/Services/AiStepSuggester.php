@@ -72,6 +72,15 @@ class AiStepSuggester
                 'message' => $e->getMessage(),
             ]);
 
+            // Surface the swallowed provider failure to Sentry for operator visibility.
+            // Self-guarded: NFR(ai-graceful) requires [] on every \Throwable, so a Sentry
+            // hiccup must never propagate past this seam.
+            try {
+                \Sentry\captureException($e);
+            } catch (\Throwable) {
+                // intentionally ignored — Sentry must not break the [] = unavailable contract
+            }
+
             return [];
         }
     }
