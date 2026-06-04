@@ -16,9 +16,10 @@ return [
     // @see: https://docs.sentry.io/platforms/php/guides/laravel/configuration/options/#logger
     // 'logger' => Sentry\Logger\DebugFileLogger::class, // By default this will log to `storage_path('logs/sentry.log')`
 
-    // The release version of your application
-    // Example with dynamic git hash: trim(exec('git --git-dir ' . base_path('.git') . ' log --pretty="%h" -n1 HEAD'))
-    'release' => env('SENTRY_RELEASE'),
+    // The release version of your application.
+    // Falls back to RENDER_GIT_COMMIT, which Render injects automatically at runtime, so every
+    // deploy is release-tagged with its commit SHA without a manual dashboard step. Null locally/CI.
+    'release' => env('SENTRY_RELEASE', env('RENDER_GIT_COMMIT')),
 
     // When left empty or `null` the Laravel environment will be used (usually discovered from `APP_ENV` in your `.env`)
     'environment' => env('SENTRY_ENVIRONMENT'),
