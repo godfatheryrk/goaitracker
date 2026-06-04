@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Sentry\State\Scope;
 use Symfony\Component\HttpFoundation\Response;
 
+use function Sentry\configureScope;
+
 class SentryContext
 {
     /**
@@ -19,7 +21,7 @@ class SentryContext
     public function handle(Request $request, Closure $next): Response
     {
         if (app()->bound('sentry') && $request->user() !== null) {
-            \Sentry\configureScope(function (Scope $scope) use ($request): void {
+            configureScope(function (Scope $scope) use ($request): void {
                 $scope->setUser(['id' => $request->user()->id]);
             });
         }
