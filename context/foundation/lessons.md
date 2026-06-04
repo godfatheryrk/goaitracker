@@ -33,3 +33,10 @@
 - **Problem**: Tailwind v4's scanner only extracts class names that appear as complete literal strings in source. A class assembled by concatenation/interpolation is never seen, so the variant utility (btn-primary, btn-error, alert-error, badge-error) is never generated and the element silently falls back to the bare base class — e.g. a colorless `.btn` with a faint hover-only background. Nothing errors, so the bug ships. Surfaced in S-07 across ui.button/ui.alert/ui.badge; only variants that happened to be written literally elsewhere compiled, masking the rest.
 - **Rule**: Never build a Tailwind/daisyUI class name by runtime concatenation or interpolation. Map each prop variant to a FULL literal class string inside the component (e.g. an array/`match`: `'primary' => 'btn btn-primary'`) so the scanner sees every utility verbatim. If dynamic assembly is unavoidable, safelist the full names (`@source inline(...)`). Verify by grepping the compiled CSS for each expected variant class after a build.
 - **Applies to**: plan, implement, impl-review
+
+## Disable external-emitting SDKs in the test environment
+
+- **Context**: Any change that wires an external telemetry / error-monitoring / APM SDK (Sentry, Datadog, Bugsnag, OTel) into the app.
+- **Problem**: A telemetry SDK left active during tests sends test-thrown exceptions to the live project, polluting real-incident data. CI is clean only by accident (no DSN there); a developer with a real DSN in their local `.env` emits on every run. Surfaced in the sentry-error-monitoring change.
+- **Rule**: Never let any external-emitting SDK (telemetry, analytics, email, webhooks) run live in the test env; pin it off in `phpunit.xml` (empty DSN/key, alongside Pulse/Telescope/Nightwatch) so test runs can't reach external services regardless of a developer's local `.env`. Don't rely on CI lacking credentials.
+- **Applies to**: plan, implement, impl-review
