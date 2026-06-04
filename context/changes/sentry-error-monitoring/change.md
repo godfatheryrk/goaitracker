@@ -1,7 +1,7 @@
 ---
 change_id: sentry-error-monitoring
 title: Wire Sentry error & performance monitoring into the Laravel app
-status: implementing
+status: implemented
 created: 2026-06-04
 updated: 2026-06-04
 archived_at: null

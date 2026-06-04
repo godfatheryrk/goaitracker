@@ -237,11 +237,11 @@ No database changes. `composer.lock` updates; deploys must run `composer install
 
 #### Automated
 
-- [x] 2.1 Static analysis stays green: `composer run analyse`
-- [x] 2.2 Full suite stays green (existing `CreateVentureTest` AI-failure test still passes): `composer run test`
+- [x] 2.1 Static analysis stays green: `composer run analyse` — ee9365a
+- [x] 2.2 Full suite stays green (existing `CreateVentureTest` AI-failure test still passes): `composer run test` — ee9365a
 
 #### Manual
 
-- [x] 2.3 Error event in Sentry carries `user.id` with NO email/IP
-- [x] 2.4 Forced AI provider failure: venture still creates with 0 steps + `ai_unavailable` notice AND an exception appears in Sentry
-- [x] 2.5 Forced AI failure with no DSN: venture still creates with 0 steps, no crash, nothing sent
+- [x] 2.3 Error event in Sentry carries `user.id` with NO email/IP — ee9365a
+- [x] 2.4 Forced AI provider failure: venture still creates with 0 steps + `ai_unavailable` notice AND an exception appears in Sentry — ee9365a
+- [x] 2.5 Forced AI failure with no DSN: venture still creates with 0 steps, no crash, nothing sent — ee9365a
