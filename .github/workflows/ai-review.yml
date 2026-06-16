@@ -1,0 +1,98 @@
+name: AI Review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, labeled]
+  workflow_dispatch:
+
+# Minimal permissions: read code, write PR comments + labels. No contents:write — review-only.
+permissions:
+  contents: read
+  pull-requests: write
+
+# One in-flight review per PR; a new push cancels the previous run.
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ai-code-review:
+    name: ai-code-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Run on opened/synchronize and manual dispatch; for `labeled`, only the on-demand retry label.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.action != 'labeled' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'ai-cr:review')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the diff vs base resolves
+
+      - name: Compute diff vs base
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            git diff "$BASE_SHA"...HEAD > pr.diff
+          else
+            git fetch origin main --depth=1
+            git diff origin/main...HEAD > pr.diff
+          fi
+          echo "Diff lines: $(wc -l < pr.diff)"
+
+      - name: Run AI reviewer
+        id: review
+        uses: ./.github/actions/ai-reviewer
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          diff-file: pr.diff
+          pr-title: ${{ github.event.pull_request.title }}
+          pr-body: ${{ github.event.pull_request.body }}
+
+      - name: Sticky comment + labels
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          VERDICT: ${{ steps.review.outputs.verdict }}
+        run: |
+          set -euo pipefail
+          # Build the sticky comment (hidden marker lets us find + update it on re-runs).
+          {
+            echo "<!-- ai-cr -->"
+            echo "## 🤖 AI Code Review — \`$VERDICT\`"
+            echo
+            echo "| Kryterium | Ocena | Werdykt |"
+            echo "|---|---|---|"
+            jq -r '.criteria[] | "| \(.name) | \(.score)/10 | \(.verdict) |"' review.json
+            echo
+            jq -r '.summary' review.json
+          } > comment.md
+
+          # Sticky: find an existing marked comment and PATCH it, else create a new one.
+          CID=$(gh api "repos/$REPO/issues/$PR/comments" \
+            --jq 'map(select(.body | startswith("<!-- ai-cr -->"))) | first | .id // empty')
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$CID" -F body=@comment.md >/dev/null
+          else
+            gh pr comment "$PR" --body-file comment.md
+          fi
+
+          # Labels: pass/fail (and clear the retry trigger so it can be re-added).
+          if [ "$VERDICT" = "pass" ]; then
+            gh pr edit "$PR" --add-label "ai-cr:passed" --remove-label "ai-cr:failed" || true
+          else
+            gh pr edit "$PR" --add-label "ai-cr:failed" --remove-label "ai-cr:passed" || true
+          fi
+          gh pr edit "$PR" --remove-label "ai-cr:review" || true
+
+      - name: Merge gate
+        run: |
+          echo "Verdict: ${{ steps.review.outputs.verdict }}"
+          test "${{ steps.review.outputs.verdict }}" = "pass"

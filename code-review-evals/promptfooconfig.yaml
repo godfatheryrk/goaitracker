@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Regression gate for the AI code-review prompt. Compares 3 FREE OpenRouter models on the same
+# criteria + fixtures. Needs OPENROUTER_API_KEY. Run: `npx promptfoo@latest eval`.
+# NOTE: the OpenRouter free-model catalogue rotates — if a slug 404s, swap it for a current `:free` id
+# from https://openrouter.ai/models?max_price=0
+description: AI code-review prompt regression gate (3 free models)
+
+prompts:
+  - file://prompts/review.txt
+
+providers:
+  - id: openrouter:poolside/laguna-m.1:free
+  - id: openrouter:poolside/laguna-xs.2:free
+  - id: openrouter:google/gemma-4-31b-it:free
+
+defaultTest:
+  assert:
+    # The gate stands on valid JSON — every model, every fixture.
+    - type: is-json
+
+tests:
+  - description: Planted per-user-isolation leak must FAIL
+    vars:
+      criteria: file://../.github/review/criteria.md
+      diff: file://fixtures/isolation-leak.diff
+    assert:
+      - type: llm-rubric
+        value: >
+          overall_verdict is "fail" AND the review flags a per-user-isolation violation —
+          a bare global query (Venture::with(...)->findOrFail / Venture::find) used instead of
+          $request->user()->ventures().
+      - type: javascript
+        value: |
+          const r = JSON.parse(output);
+          const iso = r.criteria.find(c => /isolation/i.test(c.name));
+          return r.overall_verdict === 'fail' && iso && iso.score < 6;
+
+  - description: Clean idiomatic diff must PASS
+    vars:
+      criteria: file://../.github/review/criteria.md
+      diff: file://fixtures/clean.diff
+    assert:
+      - type: javascript
+        value: |
+          const r = JSON.parse(output);
+          return r.overall_verdict === 'pass';

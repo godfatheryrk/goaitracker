@@ -1,0 +1,35 @@
+diff --git a/app/Http/Requests/Ventures/CreateVentureRequest.php b/app/Http/Requests/Ventures/CreateVentureRequest.php
+index 1a2b3c4..5d6e7f8 100644
+--- a/app/Http/Requests/Ventures/CreateVentureRequest.php
++++ b/app/Http/Requests/Ventures/CreateVentureRequest.php
+@@ -15,7 +15,7 @@ class CreateVentureRequest extends FormRequest
+     public function rules(): array
+     {
+         return [
+             'title' => ['required', 'string', 'max:120'],
+-            'description' => ['nullable', 'string'],
++            'description' => ['nullable', 'string', 'max:2000'],
+         ];
+     }
+ }
+diff --git a/tests/Feature/Ventures/CreateVentureTest.php b/tests/Feature/Ventures/CreateVentureTest.php
+index 2b3c4d5..6e7f8a9 100644
+--- a/tests/Feature/Ventures/CreateVentureTest.php
++++ b/tests/Feature/Ventures/CreateVentureTest.php
+@@ -70,4 +70,18 @@ class CreateVentureTest extends TestCase
+         $this->assertDatabaseCount('ventures', 0);
+     }
++
++    public function test_description_over_2000_chars_is_rejected(): void
++    {
++        $user = User::factory()->create();
++
++        $response = $this->actingAs($user)->post(route('ventures.store'), [
++            'title' => 'Valid title',
++            'description' => str_repeat('a', 2001),
++        ]);
++
++        $response->assertSessionHasErrors('description');
++        $this->assertDatabaseCount('ventures', 0);
++    }
+ }
