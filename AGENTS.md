@@ -25,7 +25,7 @@ NFR(isolation) is a privacy floor — a leak here is an incident regardless of f
 
 ## AI code-review pipeline (CI)
 
-PRs to `main` are reviewed by a Claude Agent SDK agent in GitHub Actions (`.github/workflows/ai-review.yml`), which scores the diff against the DoD in `.github/review/criteria.md` and gates merge on the verdict. Required GitHub secrets/variables/labels and branch-protection setup are documented in @docs/ai-code-review-pipeline.md — the workflow requires the `ANTHROPIC_API_KEY` secret (console key); `OPENROUTER_API_KEY` is only for the `code-review-evals/` promptfoo suite.
+PRs to `main` can be reviewed **on demand** by a Claude Agent SDK agent in GitHub Actions (`.github/workflows/ai-review.yml`): add the `ai-cr:review` label to a PR and it scores the diff against the DoD in `.github/review/criteria.md`, posting a sticky comment + pass/fail label. It is **advisory — it does not block merge**. Required GitHub secrets/variables/labels are documented in @docs/ai-code-review-pipeline.md — the workflow requires the `ANTHROPIC_API_KEY` secret (console key); `OPENROUTER_API_KEY` is only for the `code-review-evals/` promptfoo suite.
 
 ## Toolkit-managed block below
 

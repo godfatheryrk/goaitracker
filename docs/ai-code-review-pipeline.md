@@ -1,9 +1,10 @@
 # AI Code-Review Pipeline — setup & operations
 
-The PR code-review pipeline (lessons M5L2 + M5L3). On every pull request to `main` it
-computes the diff, runs the Claude Agent SDK reviewer against the Definition-of-Done in
-[`.github/review/criteria.md`](../.github/review/criteria.md), posts a sticky comment, applies a
-pass/fail label, and **blocks merge on a `fail` verdict**.
+The PR code-review pipeline (lessons M5L2 + M5L3). It runs **on demand** — when the `ai-cr:review`
+label is added to a pull request to `main` — computes the diff, runs the Claude Agent SDK reviewer
+against the Definition-of-Done in [`.github/review/criteria.md`](../.github/review/criteria.md), posts
+a sticky comment, and applies a pass/fail label. It is **advisory: it does not block merge** (the job
+stays green regardless of verdict and is not a required status check).
 
 Components:
 
@@ -36,11 +37,13 @@ created from files in the repo.
 `ai-cr:passed` (green), `ai-cr:failed` (red), `ai-cr:review` (blue — adding it re-triggers an
 on-demand review). Create them up front so the first `gh pr edit` does not fail.
 
-### Branch protection (Settings → Branches → Add rule for `main`)
+### Branch protection — intentionally NOT required
 
-Require the status check **`ai-code-review`** to pass before merge. This is what turns the agent's
-verdict into a real merge gate. The check only appears in the picker **after** the job has run at
-least once on the repo, so: push the pipeline + open a PR first, then add the rule.
+By design this check is **advisory and on-demand**, so `ai-code-review` is **not** added to the
+branch's required status checks — leaving it out is what keeps it non-blocking. To turn it into a
+hard merge gate later: (1) in `ai-review.yml` restore the failing gate (`test "$verdict" = pass`),
+(2) re-add `synchronize`/`opened` triggers if you want it automatic, and (3) add `ai-code-review` to
+`main`'s required status checks (the check appears in the picker only after the job has run once).
 
 ## Model choice
 
