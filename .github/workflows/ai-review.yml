@@ -1,17 +1,19 @@
 name: AI Review
 
 # Setup & operations: docs/ai-code-review-pipeline.md
+# ON-DEMAND + ADVISORY: this review runs only when the `ai-cr:review` label is added to a PR,
+# and it does NOT block merge (do not add `ai-code-review` to required status checks).
 # Required config (manual, GitHub UI):
 #   - Secret  ANTHROPIC_API_KEY  (console key — REQUIRED by this workflow)
 #   - Variable AI_REVIEW_MODEL   (optional model override; default claude-sonnet-4-6)
-#   - Branch protection on `main` requiring the `ai-code-review` status check
-#   - Labels ai-cr:passed / ai-cr:failed / ai-cr:review
+#   - Labels ai-cr:passed / ai-cr:failed / ai-cr:review (the last one triggers a run)
 # (OPENROUTER_API_KEY is only for the promptfoo evals in code-review-evals/, not this workflow.)
 
 on:
+  # On-demand only: the review runs when the `ai-cr:review` label is added to a PR.
   pull_request:
     branches: [main]
-    types: [opened, synchronize, labeled]
+    types: [labeled]
   workflow_dispatch:
 
 # Minimal permissions: read code, write PR comments + labels. No contents:write — review-only.
@@ -30,11 +32,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Run on opened/synchronize and manual dispatch; for `labeled`, only the on-demand retry label.
+    # Run on manual dispatch, or when the `ai-cr:review` label is added.
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.action != 'labeled' ||
-      (github.event.action == 'labeled' && github.event.label.name == 'ai-cr:review')
+      github.event.label.name == 'ai-cr:review'
     steps:
+      # Fail fast (before checkout / npm) with a clear message if the key is absent. This catches a
+      # MISSING/empty secret; an invalid key is caught later by the agent and the failure handler.
+      - name: Preflight — require ANTHROPIC_API_KEY
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is missing or empty — see docs/ai-code-review-pipeline.md."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -110,7 +123,38 @@ jobs:
           fi
           gh pr edit "$PR" --remove-label "ai-cr:review" || true
 
-      - name: Merge gate
+      # Advisory only — the verdict lives in the label + sticky comment; the job stays green so it
+      # never blocks merge. To turn this into a hard gate later, restore `test "$verdict" = pass`
+      # and add `ai-code-review` to the branch's required status checks.
+      - name: Report verdict (advisory)
         run: |
-          echo "Verdict: ${{ steps.review.outputs.verdict }}"
-          test "${{ steps.review.outputs.verdict }}" = "pass"
+          echo "Verdict: ${{ steps.review.outputs.verdict }} — advisory only; does not block merge."
+
+      # If anything above failed (missing/invalid key, agent error, timeout), surface it on the PR and
+      # clear the trigger label so it doesn't silently stick. PR events only, failure only.
+      - name: On failure — notify PR and clear trigger label
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          {
+            echo "<!-- ai-cr -->"
+            echo "## 🤖 AI Code Review — \`error\`"
+            echo
+            echo "The review could not run, so no verdict was produced. A common cause is a missing or"
+            echo "invalid \`ANTHROPIC_API_KEY\` secret; see the [run logs]($RUN_URL) for the exact error."
+            echo
+            echo "Re-add the \`ai-cr:review\` label to retry once it is fixed."
+          } > error-comment.md
+          CID=$(gh api "repos/$REPO/issues/$PR/comments" \
+            --jq 'map(select(.body | startswith("<!-- ai-cr -->"))) | first | .id // empty')
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$CID" -F body=@error-comment.md >/dev/null
+          else
+            gh pr comment "$PR" --body-file error-comment.md
+          fi
+          gh pr edit "$PR" --remove-label "ai-cr:review" || true
