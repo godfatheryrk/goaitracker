@@ -5,7 +5,7 @@ Reads a `git diff`, scores it against the Definition-of-Done criteria in
 [`.github/review/criteria.md`](../../.github/review/criteria.md), and returns a structured JSON
 verdict. Wrapped for CI by the composite action at `.github/actions/ai-reviewer/`.
 
-Part of the 10xChampion CI/CD code-review pipeline (lessons M5L2 + M5L3).
+Part of the CI/CD code-review pipeline (lessons M5L2 + M5L3).
 
 ## Install
 
@@ -48,3 +48,10 @@ The full JSON verdict is printed to **stdout**; cost/turn telemetry goes to **st
 
 See the "Output contract" block in `.github/review/criteria.md` — the agent's
 `outputFormat` schema is derived from the same shape (`src/review-schema.ts`).
+
+## CI configuration
+
+The required GitHub secrets, variables, labels, and branch-protection setup for the CI pipeline are
+documented in [`docs/ai-code-review-pipeline.md`](../../docs/ai-code-review-pipeline.md). In short:
+the workflow requires the `ANTHROPIC_API_KEY` secret; `OPENROUTER_API_KEY` is only for the promptfoo
+evals; `AI_REVIEW_MODEL` is an optional model-override variable.

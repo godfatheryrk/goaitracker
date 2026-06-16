@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { query } from "@anthropic-ai/claude-agent-sdk";
 import { REVIEW_JSON_SCHEMA, REVIEW_SCHEMA, SYSTEM_PROMPT, type Review } from "./review-schema";
 
@@ -7,7 +7,7 @@ const MODEL = process.env.AI_REVIEW_MODEL ?? "claude-sonnet-4-6";
 const MAX_BUDGET_USD = Number(process.env.AI_REVIEW_MAX_BUDGET_USD ?? "0.5");
 
 /** Read the diff from --diff-file / $DIFF_FILE, else from stdin (local `git diff | npm run review`). */
-async function readDiff(): Promise<string> {
+export async function readDiff(): Promise<string> {
   const fileArg = process.argv.find((a) => a.startsWith("--diff-file="))?.split("=")[1];
   const diffFile = fileArg ?? process.env.DIFF_FILE;
   if (diffFile) return readFileSync(diffFile, "utf8");
@@ -18,7 +18,7 @@ async function readDiff(): Promise<string> {
 }
 
 /** Resolve the DoD criteria file: $CRITERIA_FILE, else $GITHUB_WORKSPACE, else repo-relative default. */
-function readCriteria(): string {
+export function readCriteria(): string {
   const explicit = process.env.CRITERIA_FILE;
   if (explicit) return readFileSync(explicit, "utf8");
 
@@ -30,7 +30,7 @@ function readCriteria(): string {
   return readFileSync(fallback, "utf8");
 }
 
-function buildPrompt(criteria: string, diff: string): string {
+export function buildPrompt(criteria: string, diff: string): string {
   const title = process.env.PR_TITLE?.trim();
   const body = process.env.PR_BODY?.trim();
   const context =
@@ -43,7 +43,7 @@ function buildPrompt(criteria: string, diff: string): string {
   );
 }
 
-async function review(criteria: string, diff: string): Promise<Review> {
+export async function review(criteria: string, diff: string): Promise<Review> {
   const result = query({
     prompt: buildPrompt(criteria, diff),
     options: {
@@ -78,23 +78,31 @@ async function review(criteria: string, diff: string): Promise<Review> {
   throw new Error("Agent nie zwrócił wyniku");
 }
 
-const criteria = readCriteria();
-const diff = await readDiff();
+/** CLI entry: read criteria + diff, run the agent, emit JSON to stdout (+ optional REPORT_FILE). */
+export async function runCli(): Promise<void> {
+  const criteria = readCriteria();
+  const diff = await readDiff();
 
-if (diff.trim().length === 0) {
-  console.error("[reviewer] Pusty diff — nic do recenzji.");
-  process.exit(1);
+  if (diff.trim().length === 0) {
+    console.error("[reviewer] Pusty diff — nic do recenzji.");
+    process.exitCode = 1;
+    return;
+  }
+
+  try {
+    const data = await review(criteria, diff);
+    const json = JSON.stringify(data, null, 2);
+    if (process.env.REPORT_FILE) writeFileSync(process.env.REPORT_FILE, json);
+    console.log(json);
+  } catch (err: unknown) {
+    console.error(`[reviewer] ${err instanceof Error ? err.message : String(err)}`);
+    process.exitCode = 1;
+  }
 }
 
-const output = review(criteria, diff);
-output
-  .then((data) => {
-    const json = JSON.stringify(data, null, 2);
-    const reportFile = process.env.REPORT_FILE;
-    if (reportFile) writeFileSync(reportFile, json);
-    console.log(json);
-  })
-  .catch((err: unknown) => {
-    console.error(`[reviewer] ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
-  });
+// Run the CLI only when this file is the process entry point — not when imported by tests.
+const invokedDirectly =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (invokedDirectly) {
+  void runCli();
+}

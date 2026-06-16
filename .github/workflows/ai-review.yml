@@ -1,5 +1,13 @@
 name: AI Review
 
+# Setup & operations: docs/ai-code-review-pipeline.md
+# Required config (manual, GitHub UI):
+#   - Secret  ANTHROPIC_API_KEY  (console key — REQUIRED by this workflow)
+#   - Variable AI_REVIEW_MODEL   (optional model override; default claude-sonnet-4-6)
+#   - Branch protection on `main` requiring the `ai-code-review` status check
+#   - Labels ai-cr:passed / ai-cr:failed / ai-cr:review
+# (OPENROUTER_API_KEY is only for the promptfoo evals in code-review-evals/, not this workflow.)
+
 on:
   pull_request:
     branches: [main]
@@ -37,11 +45,18 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
+          # Exclude generated/lockfile/build noise — it costs tokens but isn't reviewable.
+          EXCLUDES=(
+            ':(exclude)**/package-lock.json'
+            ':(exclude)**/*.lock'
+            ':(exclude)**/dist/**'
+            ':(exclude)**/node_modules/**'
+          )
           if [ -n "$BASE_SHA" ]; then
-            git diff "$BASE_SHA"...HEAD > pr.diff
+            git diff "$BASE_SHA"...HEAD -- . "${EXCLUDES[@]}" > pr.diff
           else
             git fetch origin main --depth=1
-            git diff origin/main...HEAD > pr.diff
+            git diff origin/main...HEAD -- . "${EXCLUDES[@]}" > pr.diff
           fi
           echo "Diff lines: $(wc -l < pr.diff)"
 
@@ -53,6 +68,9 @@ jobs:
           diff-file: pr.diff
           pr-title: ${{ github.event.pull_request.title }}
           pr-body: ${{ github.event.pull_request.body }}
+          # Override the model without editing files: set repo Actions variable AI_REVIEW_MODEL
+          # (e.g. claude-haiku-4-5). Falls back to Sonnet when unset.
+          model: ${{ vars.AI_REVIEW_MODEL || 'claude-sonnet-4-6' }}
 
       - name: Sticky comment + labels
         if: github.event_name == 'pull_request'

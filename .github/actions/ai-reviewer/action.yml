@@ -18,6 +18,10 @@ inputs:
   pr-body:
     description: Pull request body (optional context for the agent).
     required: false
+  model:
+    description: Anthropic model id for the review (e.g. claude-sonnet-4-6, claude-haiku-4-5).
+    required: false
+    default: claude-sonnet-4-6
 
 outputs:
   verdict:
@@ -46,6 +50,7 @@ runs:
       working-directory: packages/code-reviewer
       env:
         ANTHROPIC_API_KEY: ${{ inputs.api-key }}
+        AI_REVIEW_MODEL: ${{ inputs.model }}
         DIFF_FILE: ${{ github.workspace }}/${{ inputs.diff-file }}
         CRITERIA_FILE: ${{ github.workspace }}/.github/review/criteria.md
         REPORT_FILE: ${{ github.workspace }}/review.json
