@@ -1,0 +1,27 @@
+diff --git a/app/Http/Controllers/VenturesController.php b/app/Http/Controllers/VenturesController.php
+index 1a2b3c4..5d6e7f8 100644
+--- a/app/Http/Controllers/VenturesController.php
++++ b/app/Http/Controllers/VenturesController.php
+@@ -1,12 +1,13 @@
+ <?php
+
+ namespace App\Http\Controllers;
+
+ use App\Enums\StepSource;
+ use App\Http\Requests\Ventures\CreateVentureRequest;
+ use App\Models\Step;
++use App\Models\Venture;
+ use App\Services\AiStepSuggester;
+ use Illuminate\Http\RedirectResponse;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\DB;
+ use Illuminate\View\View;
+@@ -85,7 +86,7 @@ class VenturesController extends Controller
+
+     public function show(Request $request, int $venture): View
+     {
+-        $model = $request->user()->ventures()->with(['steps', 'expenses'])->findOrFail($venture);
++        $model = Venture::with(['steps', 'expenses'])->findOrFail($venture);
+         $completed = $model->steps->where('is_completed', true)->count();
+         $total = $model->steps->count();
+         $totalCost = $model->expenses()->sum('amount');
