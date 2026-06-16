@@ -37,6 +37,17 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.label.name == 'ai-cr:review'
     steps:
+      # Fail fast (before checkout / npm) with a clear message if the key is absent. This catches a
+      # MISSING/empty secret; an invalid key is caught later by the agent and the failure handler.
+      - name: Preflight — require ANTHROPIC_API_KEY
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is missing or empty — see docs/ai-code-review-pipeline.md."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -118,3 +129,32 @@ jobs:
       - name: Report verdict (advisory)
         run: |
           echo "Verdict: ${{ steps.review.outputs.verdict }} — advisory only; does not block merge."
+
+      # If anything above failed (missing/invalid key, agent error, timeout), surface it on the PR and
+      # clear the trigger label so it doesn't silently stick. PR events only, failure only.
+      - name: On failure — notify PR and clear trigger label
+        if: ${{ failure() && github.event_name == 'pull_request' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          {
+            echo "<!-- ai-cr -->"
+            echo "## 🤖 AI Code Review — \`error\`"
+            echo
+            echo "The review could not run, so no verdict was produced. A common cause is a missing or"
+            echo "invalid \`ANTHROPIC_API_KEY\` secret; see the [run logs]($RUN_URL) for the exact error."
+            echo
+            echo "Re-add the \`ai-cr:review\` label to retry once it is fixed."
+          } > error-comment.md
+          CID=$(gh api "repos/$REPO/issues/$PR/comments" \
+            --jq 'map(select(.body | startswith("<!-- ai-cr -->"))) | first | .id // empty')
+          if [ -n "$CID" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$CID" -F body=@error-comment.md >/dev/null
+          else
+            gh pr comment "$PR" --body-file error-comment.md
+          fi
+          gh pr edit "$PR" --remove-label "ai-cr:review" || true

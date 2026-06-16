@@ -45,6 +45,14 @@ hard merge gate later: (1) in `ai-review.yml` restore the failing gate (`test "$
 (2) re-add `synchronize`/`opened` triggers if you want it automatic, and (3) add `ai-code-review` to
 `main`'s required status checks (the check appears in the picker only after the job has run once).
 
+## Failure behaviour
+
+If the review cannot run — a missing/empty `ANTHROPIC_API_KEY` (caught by a preflight step before
+checkout), an invalid key, an agent error, or the 10-minute timeout — the job ends **red**, posts an
+`error` sticky comment on the PR pointing at the run logs, and **removes the `ai-cr:review` label** so
+it does not silently stick. No verdict label is set, and merge is unaffected (the check is advisory).
+Re-add `ai-cr:review` to retry once the cause is fixed.
+
 ## Model choice
 
 The agent runs on **Claude Agent SDK = Anthropic models only**. "Cheaper model" therefore means a
